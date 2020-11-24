@@ -28,6 +28,10 @@ volatile bool arduino_overflow = false;
 
 /*volatile*/ can_frame_stream cf_stream;
 
+#define STATE_INIT 0
+#define STATE_ALGO 1
+int state = STATE_INIT;
+
 void setup()
 {
 	// initialize serial communications at 1Mbps
@@ -50,11 +54,7 @@ void setup()
 	SPI.usingInterrupt(0);
 	communication.init(nodeId, &mcp2515, &cf_stream);
 
-	luminaire.init(false);
-
-	//After 2 seconds, sends a message through the CAN bus for the other nodes to register it's presence
-	delay(2000);
-	communication.sendBroadcastWakeup();
+	//luminaire.init(false);
 }
 
 void irqHandler()
@@ -65,6 +65,8 @@ void irqHandler()
 	if (irq & MCP2515::CANINTF_RX0IF)
 	{
 		mcp2515.readMessage(MCP2515::RXB0, &frm);
+		/*Serial.print("BF0 ");
+		Serial.print(frm.can_id);*/
 		if (!cf_stream.put(frm)) //no space
 			arduino_overflow = true;
 	}
@@ -72,6 +74,8 @@ void irqHandler()
 	if (irq & MCP2515::CANINTF_RX1IF)
 	{
 		mcp2515.readMessage(MCP2515::RXB1, &frm);
+		/*Serial.print("BF1 ");
+		Serial.print(frm.can_id);*/
 		if (!cf_stream.put(frm)) //no space
 			arduino_overflow = true;
 	}
@@ -88,6 +92,14 @@ void irqHandler()
 
 void loop()
 {
+	if(state == STATE_INIT) {
+		if(micros() > 2000000) {
+			//After 2 seconds, sends a message through the CAN bus for the other nodes to register it's presence
+			communication.sendBroadcastWakeup();
+			state = STATE_ALGO;
+		}
+	}
+
 	/*if (hubNode)
 	{*/
 	readSerial();
@@ -123,7 +135,7 @@ void loop()
 		}
 	}
 
-	luminaire.loop();
+	//luminaire.loop();
 }
 
 /**
@@ -138,7 +150,7 @@ void readSerial()
 		{
 			luminaire.setOccupied(data == 1);
 		}
-		communication.sendRequestLuminaireData(0);
+		
 		//setLuxRef(data);
 	}
 }

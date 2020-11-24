@@ -5,12 +5,14 @@
 #define CONTROL_DELAY 10000						//100 Hz corresponds to 1/100 s = 10000us
 #define LPF_SAMPLING_DELAY (CONTROL_DELAY / 80) // LPF sample 80 times in one control_delay
 
-#define LDR_SLOPE_M -0.9013f
-#define LDR_SLOPE_B 2.30f
+#define LDR_SLOPE_M -0.9013f  //MIGUEL
+#define LDR_SLOPE_B 1.967f  //CHAGAS 48.5 LUX
+//#define LDR_SLOPE_B 2.20f ZE		48.5 LUX
+//#define LDR_SLOPE_B 2.60f MIGUEL  48.5 LUX
 
 //Static function
 float Luminaire::getVoltage(int pin) {
-	return (analogRead(pin)/*+random(0,30)-15*/)*5/1024.0f;
+	return (analogRead(pin))*5/1024.0f;
 }
 
 void Luminaire::init(bool occupied) {
@@ -18,7 +20,7 @@ void Luminaire::init(bool occupied) {
 	pinMode(LDR_PIN, INPUT);
 
 	//Calibrates
-	initialCalibration();
+	//initialCalibration();
 
 	// Changes the desired LUX value
 	setOccupied(occupied);
@@ -77,7 +79,7 @@ void Luminaire::control(unsigned long timeNow, unsigned long samplingTime)
 	}
 
 	//Apply error to the controller to get the PWM value
-	int pwm = controller.calc(errorVoltage, samplingTime, luxRef, systemGain);
+	int pwm = 0;//controller.calc(errorVoltage, samplingTime, luxRef, systemGain);
 
 	//Apply PWM SIGNAL
 	analogWrite(LED_PIN, pwm);

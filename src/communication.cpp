@@ -12,14 +12,16 @@ void Communication::init(int nodeId, MCP2515 *mcp2515, can_frame_stream* cf_stre
 
     //Init CAN Bus
     mcp2515->reset();
-    mcp2515->setBitrate(CAN_125KBPS);
+    mcp2515->setBitrate(CAN_125KBPS, MCP_16MHZ);
     mcp2515->setNormalMode();
 }
 
 void Communication::received(Luminaire *luminaire, can_frame *frame)
 {
+    Serial.print("Received can frame id=0x");
+    Serial.println(frame->can_id, HEX);
+
     int msgType = frame->can_id & 0x000000FF; //GETs first 8 bits that have the type
-    
     if(msgType == CAN_WAKEUP_BROADCAST) {
         int sender = frame->can_id & (0x06000000);
 
@@ -29,9 +31,10 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 }
 
 void Communication::sendBroadcastWakeup() {
-    struct can_frame canMsg;
-    canMsg.can_id = (0 << 27) | (nodeId << 25) | CAN_WAKEUP_BROADCAST;
-    canMsg.can_dlc = 0;
+    Serial.print("Sending CAN_WAKEUP_BROADCAST");
+    sendingFrame.can_id = (0 << 27) | (nodeId << 25) | CAN_WAKEUP_BROADCAST;
+    sendingFrame.can_dlc = 0;
+    mcp2515->sendMessage(&sendingFrame);
 }
 
 /*void Communication::sendResponseLuminaireData(Luminaire *luminaire)

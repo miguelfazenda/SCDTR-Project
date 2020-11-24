@@ -14,6 +14,7 @@ private:
     MCP2515* mcp2515;
     uint8_t nodeId;
     can_frame_stream* cf_stream;
+    struct can_frame sendingFrame;
     
     /**
      * CAN_RESPONSE_GET_LUMINAIRE_DATA
