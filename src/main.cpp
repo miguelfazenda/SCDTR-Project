@@ -7,7 +7,7 @@
 #include "can_frame_stream.h"
 
 #define EEPROM_ADDR_CANID 0x00 //Address of where to get the can id of this arduino on the EEPROM
-
+//OLAAAAAAA :)
 //The CAN id of this arduino (uint8_t is one byte)
 uint8_t nodeId;
 
