@@ -7,6 +7,9 @@
 #include "can_frame_stream.h"
 
 #define CAN_WAKEUP_BROADCAST 1
+#define CAN_CALIB_READY 2
+#define CAN_CALIB_LED_ON 3
+#define CAN_CALIB_GAIN 4
 
 class Communication
 {
@@ -24,8 +27,8 @@ public:
     Communication();
     void init(MCP2515* mcp2515, can_frame_stream* cf_stream);
     void received(Luminaire *luminaire, can_frame *frame);
+    MCP2515::ERROR writeFloat(uint32_t id, uint32_t val);
 
-    
     int putFrameInBuffer(can_frame &);
     int getFrameInBuffer(can_frame &);
 
@@ -39,6 +42,13 @@ public:
     //void sendRequestLuminaireData(uint8_t destination);
 
     void sendBroadcastWakeup();
+    void sendCalibLedOn();
+    void sendCalibReady(float val);
+    void sendCalibGain(float val);
+};
+union my_can_msg {
+    float value;
+    unsigned char bytes[4];
 };
 
 #endif

@@ -15,5 +15,5 @@ extern Communication communication;
 extern Luminaire luminaire;
 extern MainFSM mainFSM;
 extern LPF lpf;
-
+extern CalibrationFSM calibrationFSM;
 #endif

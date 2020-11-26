@@ -16,6 +16,17 @@ void Communication::init(MCP2515 *mcp2515, can_frame_stream *cf_stream)
     mcp2515->setBitrate(CAN_125KBPS, MCP_16MHZ);
     mcp2515->setNormalMode();
 }
+MCP2515::ERROR Communication::writeFloat(uint32_t id, uint32_t val) {
+    can_frame frame;
+    frame.can_id = id;
+    frame.can_dlc = 4;
+    my_can_msg msg;
+    msg.value = val; //pack data
+    for( int i = 0; i < 4; i++ ) //prepare can message
+        frame.data[i] = msg.bytes[i];
+    //send data
+    return mcp2515->sendMessage(&frame);
+}
 
 void Communication::received(Luminaire *luminaire, can_frame *frame)
 {
@@ -23,6 +34,17 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     Serial.println(frame->can_id, HEX);
 
     int msgType = frame->can_id & 0x000000FF; //GETs first 8 bits that have the type
+    int sender = frame ->can_id & 0x03000000;
+    my_can_msg msg;
+    if (frame->can_dlc != 0)
+    {
+        for (size_t i = 0; i < 4; i++)
+        {
+            msg.bytes[i] = frame->data[i];
+        }
+        
+    }
+    
 
     if (msgType == CAN_WAKEUP_BROADCAST)
     {
@@ -34,6 +56,15 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
         
         nodesList[numTotalNodes] = sender;
         numTotalNodes++;
+    }
+    else if(msgType == CAN_CALIB_READY){
+        calibrationFSM.numNodesReady++;
+    }
+    else if(msgType == CAN_CALIB_LED_ON){
+        calibrationFSM.otherNodeLedOn=true; 
+    }
+    else if (msgType == CAN_CALIB_GAIN){
+        calibrationFSM.gainMatrix[nodeId][sender]=msg.value;
     }
     /*else if (msgType == CALIB_READY)
     {
@@ -48,6 +79,21 @@ void Communication::sendBroadcastWakeup()
     sendingFrame.can_id = (0 << 27) | (nodeId << 25) | CAN_WAKEUP_BROADCAST;
     sendingFrame.can_dlc = 0;
     mcp2515->sendMessage(&sendingFrame);
+}
+void Communication::sendCalibLedOn()
+{
+    Serial.print("Sending Calib_Led_on");
+    sendingFrame.can_id = (0 << 27) | (nodeId << 25) | CAN_CALIB_LED_ON;
+    sendingFrame.can_dlc = 0;
+    mcp2515->sendMessage(&sendingFrame);
+}
+void Communication::sendCalibReady(float val){
+    Serial.print("Sending Calib_Ready");
+    communication.writeFloat((0 << 27) | (nodeId << 25) | CAN_CALIB_READY, val);
+}
+void Communication::sendCalibGain(float val){
+    Serial.print("Sending Calib_Gain");
+    communication.writeFloat((0 << 27) | (nodeId << 25) | CAN_CALIB_GAIN, val);
 }
 
 /*void Communication::sendResponseLuminaireData(Luminaire *luminaire)

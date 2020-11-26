@@ -14,6 +14,7 @@ Communication communication;
 Luminaire luminaire;
 MainFSM mainFSM;
 LPF lpf;
+CalibrationFSM calibrationFSM;
 
 #define EEPROM_ADDR_CANID 0x00 //Address of where to get the can id of this arduino on the EEPROM
 
