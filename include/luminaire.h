@@ -3,7 +3,6 @@
 
 #include "simulador.h"
 #include "controller.h"
-#include "lpf.h"
 
 #define R1_val 10 //valor da resistencia 1 em kilo Ohm
 
@@ -14,7 +13,6 @@ class Luminaire {
 private:
     Simulador simulator;
     Controller controller;
-    LPF lpf;
     unsigned long lastSampleTime = 0;
     unsigned long lpfSampleTime = 0;
     int luxRef;
@@ -44,10 +42,7 @@ public:
     float luxToVoltage(int lux);
     float voltageToLux(float voltage);
 
-    /**
-     * @returns The voltage at pin
-     */
-    static float getVoltage(int pin);
+    float getVoltage();
 };
 
 #endif

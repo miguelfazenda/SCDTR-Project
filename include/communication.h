@@ -12,7 +12,6 @@ class Communication
 {
 private:
     MCP2515* mcp2515;
-    uint8_t nodeId;
     can_frame_stream* cf_stream;
     struct can_frame sendingFrame;
     
@@ -23,7 +22,7 @@ private:
     //void sendResponseLuminaireData(Luminaire* luminaire);
 public:
     Communication();
-    void init(int nodeId, MCP2515* mcp2515, can_frame_stream* cf_stream);
+    void init(MCP2515* mcp2515, can_frame_stream* cf_stream);
     void received(Luminaire *luminaire, can_frame *frame);
 
     

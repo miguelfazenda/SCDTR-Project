@@ -1,12 +1,13 @@
 #include "communication.h"
 
+#include "glob.h"
+
 Communication::Communication()
 {
 }
 
-void Communication::init(int nodeId, MCP2515 *mcp2515, can_frame_stream* cf_stream)
+void Communication::init(MCP2515 *mcp2515, can_frame_stream *cf_stream)
 {
-    this->nodeId = nodeId;
     this->mcp2515 = mcp2515;
     this->cf_stream = cf_stream;
 
@@ -22,15 +23,27 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     Serial.println(frame->can_id, HEX);
 
     int msgType = frame->can_id & 0x000000FF; //GETs first 8 bits that have the type
-    if(msgType == CAN_WAKEUP_BROADCAST) {
+
+    if (msgType == CAN_WAKEUP_BROADCAST)
+    {
         int sender = frame->can_id & (0x06000000);
 
         Serial.print("Received CAN_WAKEUP_BROADCAST from node ");
         Serial.println(sender);
+
+        
+        nodesList[numTotalNodes] = sender;
+        numTotalNodes++;
     }
+    /*else if (msgType == CALIB_READY)
+    {
+        float valData;
+        mainFSM.calibrationFSM.SetNodeReady(sender, valData);
+    }*/
 }
 
-void Communication::sendBroadcastWakeup() {
+void Communication::sendBroadcastWakeup()
+{
     Serial.print("Sending CAN_WAKEUP_BROADCAST");
     sendingFrame.can_id = (0 << 27) | (nodeId << 25) | CAN_WAKEUP_BROADCAST;
     sendingFrame.can_dlc = 0;
@@ -46,7 +59,7 @@ void Communication::sendBroadcastWakeup() {
     /*canMsg.data[2] = lux;
     canMsg.data[3] = pwm;*/
 
-    /*mcp2515->sendMessage(&canMsg);
+/*mcp2515->sendMessage(&canMsg);
 }
 
 void Communication::sendRequestLuminaireData(uint8_t destination)

@@ -1,23 +1,23 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <mcp2515.h>
-#include "util.h"
 #include "communication.h"
 #include "luminaire.h"
 #include "can_frame_stream.h"
+#include "glob.h"
 
-#define EEPROM_ADDR_CANID 0x00 //Address of where to get the can id of this arduino on the EEPROM
-//OLAAAAAAA :)
-//The CAN id of this arduino (uint8_t is one byte)
 uint8_t nodeId;
+uint8_t nodesList[10] = {0};
+int numTotalNodes;
 
 Communication communication;
-MCP2515 mcp2515(10);
-
-//If this is the hub node that connects to the computer
-bool hubNode = false;
-
 Luminaire luminaire;
+MainFSM mainFSM;
+LPF lpf;
+
+#define EEPROM_ADDR_CANID 0x00 //Address of where to get the can id of this arduino on the EEPROM
+
+MCP2515 mcp2515(10);
 
 void readSerial();
 void irqHandler();
@@ -42,8 +42,6 @@ void setup()
 
 	//Read from EEPROM the CAN id
 	nodeId = EEPROM.read(EEPROM_ADDR_CANID);
-	//The hub arduino is the one that has canId 0
-	hubNode = (nodeId == 0x00);
 
 	/**
 	 * INIT CAN BUS
@@ -52,7 +50,7 @@ void setup()
 	//use interrupt at pin 2
 	//Must tell SPI lib that ISR for interrupt vector zero will be using SPI
 	SPI.usingInterrupt(0);
-	communication.init(nodeId, &mcp2515, &cf_stream);
+	communication.init(&mcp2515, &cf_stream);
 
 	//luminaire.init(false);
 }

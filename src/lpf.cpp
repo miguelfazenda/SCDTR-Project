@@ -1,12 +1,14 @@
 #include "lpf.h"
 #include <Arduino.h>
-#include "luminaire.h"
+
+#include "glob.h"
+
 /**
  * Sample the voltage and store it on lpfSamples (moving average vector)
  */
 void LPF::sample()
 {
-	float measuredVoltage = Luminaire::getVoltage(LDR_PIN);
+	float measuredVoltage = luminaire.getVoltage();
 	lpfSamples[lpfIdx] = measuredVoltage;
 
 	//Cycles the index to write from [0, 19], and stores the total amount of valid samples on the vector

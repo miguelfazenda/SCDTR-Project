@@ -1,6 +1,7 @@
 #include "luminaire.h"
 #include <Arduino.h>
-#include "util.h"
+
+#include "glob.h"
 
 #define CONTROL_DELAY 10000						//100 Hz corresponds to 1/100 s = 10000us
 #define LPF_SAMPLING_DELAY (CONTROL_DELAY / 80) // LPF sample 80 times in one control_delay
@@ -11,8 +12,8 @@
 //#define LDR_SLOPE_B 2.60f MIGUEL  48.5 LUX
 
 //Static function
-float Luminaire::getVoltage(int pin) {
-	return (analogRead(pin))*5/1024.0f;
+float Luminaire::getVoltage() {
+	return (analogRead(LED_PIN))*5/1024.0f;
 }
 
 void Luminaire::init(bool occupied) {
@@ -122,11 +123,11 @@ void Luminaire::initialCalibration()
 	//Calibrate gain
 	analogWrite(LED_PIN, pwm1);
 	delay(1000);
-	int lux1 = voltageToLux(getVoltage(LDR_PIN));
+	int lux1 = voltageToLux(getVoltage());
 
 	analogWrite(LED_PIN, pwm2);
 	delay(1000);
-	int lux2 = voltageToLux(getVoltage(LDR_PIN));
+	int lux2 = voltageToLux(getVoltage());
 	systemGain = (float)(lux1-lux2) / (pwm1-pwm2);
 
 	Serial.print("Calibration successful!\t Gain=");
@@ -147,7 +148,7 @@ void Luminaire::initialCalibration()
 void Luminaire::setLuxRef(int lux)
 {
 	luxRef = lux;
-	simulator.startStep(Luminaire::getVoltage(LDR_PIN), luxToVoltage(luxRef));
+	simulator.startStep(getVoltage(), luxToVoltage(luxRef));
 }
 
 /**

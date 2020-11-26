@@ -1,7 +1,7 @@
 #ifndef LPF_H
 #define LPF_H
 
-#include "util.h"
+#include "luminaire.h"
 
 #define LPF_TOTAL_SAMPLES 20	//Number of samples the LPF moving average stores
 

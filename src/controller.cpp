@@ -1,5 +1,4 @@
 #include "controller.h"
-#include "util.h"
 #include <Arduino.h> //Só serve para os prints
 
 #define KP 10//15
