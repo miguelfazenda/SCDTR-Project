@@ -9,7 +9,7 @@ class can_frame_stream
 {
 private:
     //Arduino buffer for received can frames
-    static const int buffsize = 10;
+    static const int buffsize = 20;
     can_frame cf_buffer[buffsize];
     int read_index;
     int write_index;

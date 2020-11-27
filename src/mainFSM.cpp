@@ -19,12 +19,25 @@ void MainFSM::setState(State state)
 void MainFSM::runStateInit(unsigned long timeSinceLastTransition) {
     if(timeSinceLastTransition > 2000000) {
         communication.sendBroadcastWakeup();
+        Serial.println("[MainFSM] State = WakeupWait");
         setState(State::WakeupWait);
     }
 }
 
 void MainFSM::runStateWakeupWait(unsigned long timeSinceLastTransition) {
     if(timeSinceLastTransition > 2000000) {
+        Serial.println("[MainFSM] Finished waiting wakeup");
+        
+        //Prints list of nodes
+        Serial.print("Nodes list: [");
+        for(int i = 0; i<numTotalNodes; i++) {
+            if(i > 0)
+                Serial.print(", ");
+            Serial.print(nodesList[i]);
+        }
+        Serial.println("]");
+        
+        Serial.println("[MainFSM] State = Calibrate");
         setState(State::Calibrate);
     }
 }
@@ -36,10 +49,10 @@ void MainFSM::loop() {
     switch (state)
     {
     case State::Init:
-        runStateInit(currentTime);
+        runStateInit(timeSinceLastTransition);
         break;
     case State::WakeupWait:
-        runStateWakeupWait(currentTime);
+        runStateWakeupWait(timeSinceLastTransition);
         break;
     case State::Calibrate:
         calibrationFSM.loop();

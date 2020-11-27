@@ -12,8 +12,6 @@ private:
 
     unsigned long lastTransitionTime;
 public:
-    CalibrationFSM calibrationFSM;
-
     MainFSM();
     void setState(State state);
     void loop();

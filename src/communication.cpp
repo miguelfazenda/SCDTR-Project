@@ -2,6 +2,13 @@
 
 #include "glob.h"
 
+/**
+ * Creates a CAN frame ID that contains the message type, the destination and the sender
+ */
+inline canid_t canMessageId(uint8_t destination, uint8_t messageType) {
+    return ((canid_t)destination << 16) | ((canid_t)nodeId << 8) | messageType | CAN_EFF_FLAG;
+}
+
 Communication::Communication()
 {
 }
@@ -30,11 +37,11 @@ MCP2515::ERROR Communication::writeFloat(uint32_t id, uint32_t val) {
 
 void Communication::received(Luminaire *luminaire, can_frame *frame)
 {
-    Serial.print("Received can frame id=0x");
+    Serial.print("[Comm] Received can frame id=0x");
     Serial.println(frame->can_id, HEX);
 
-    int msgType = frame->can_id & 0x000000FF; //GETs first 8 bits that have the type
-    int sender = frame ->can_id & 0x03000000;
+    uint8_t msgType = frame->can_id & 0x000000FF; //GETs first 8 bits that have the type
+    uint8_t sender = (frame->can_id & 0x0000FF00) >> 8;
     my_can_msg msg;
     if (frame->can_dlc != 0)
     {
@@ -42,29 +49,26 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
         {
             msg.bytes[i] = frame->data[i];
         }
-        
     }
     
 
     if (msgType == CAN_WAKEUP_BROADCAST)
     {
-        int sender = frame->can_id & (0x06000000);
-
         Serial.print("Received CAN_WAKEUP_BROADCAST from node ");
         Serial.println(sender);
-
         
-        nodesList[numTotalNodes] = sender;
-        numTotalNodes++;
+        //Register the sender node ID
+        registerNewNode(sender);
     }
     else if(msgType == CAN_CALIB_READY){
-        calibrationFSM.numNodesReady++;
+        Serial.println("Other Node Ready");
+        calibrationFSM.incrementNodesReady();
     }
     else if(msgType == CAN_CALIB_LED_ON){
         calibrationFSM.otherNodeLedOn=true; 
     }
     else if (msgType == CAN_CALIB_GAIN){
-        calibrationFSM.gainMatrix[nodeId][sender]=msg.value;
+        //calibrationFSM.gainMatrix[nodeId][sender]=msg.value;
     }
     /*else if (msgType == CALIB_READY)
     {
@@ -75,25 +79,25 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 
 void Communication::sendBroadcastWakeup()
 {
-    Serial.print("Sending CAN_WAKEUP_BROADCAST");
-    sendingFrame.can_id = (0 << 27) | (nodeId << 25) | CAN_WAKEUP_BROADCAST;
+    Serial.println("[Comm] Sending CAN_WAKEUP_BROADCAST");
+    sendingFrame.can_id = canMessageId(0, CAN_WAKEUP_BROADCAST);
     sendingFrame.can_dlc = 0;
     mcp2515->sendMessage(&sendingFrame);
 }
 void Communication::sendCalibLedOn()
 {
-    Serial.print("Sending Calib_Led_on");
-    sendingFrame.can_id = (0 << 27) | (nodeId << 25) | CAN_CALIB_LED_ON;
+    Serial.println("[Comm] Sending Calib_Led_on");
+    sendingFrame.can_id = canMessageId(0, CAN_CALIB_LED_ON);
     sendingFrame.can_dlc = 0;
     mcp2515->sendMessage(&sendingFrame);
 }
 void Communication::sendCalibReady(float val){
-    Serial.print("Sending Calib_Ready");
-    communication.writeFloat((0 << 27) | (nodeId << 25) | CAN_CALIB_READY, val);
+    Serial.println("[Comm] Sending Calib_Ready");
+    communication.writeFloat(canMessageId(0, CAN_CALIB_READY), val);
 }
 void Communication::sendCalibGain(float val){
-    Serial.print("Sending Calib_Gain");
-    communication.writeFloat((0 << 27) | (nodeId << 25) | CAN_CALIB_GAIN, val);
+    Serial.println("[Comm] Sending Calib_Gain");
+    communication.writeFloat(canMessageId(0, CAN_CALIB_GAIN), val);
 }
 
 /*void Communication::sendResponseLuminaireData(Luminaire *luminaire)

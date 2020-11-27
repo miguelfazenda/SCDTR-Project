@@ -43,6 +43,12 @@ void setup()
 
 	//Read from EEPROM the CAN id
 	nodeId = EEPROM.read(EEPROM_ADDR_CANID);
+	nodesList[0] = nodeId; //Add it to the list of Nodes
+	numTotalNodes = 1;
+
+	Serial.print(" ------  Node ");
+	Serial.println(nodeId);
+	Serial.println();
 
 	/**
 	 * INIT CAN BUS
@@ -54,6 +60,32 @@ void setup()
 	communication.init(&mcp2515, &cf_stream);
 
 	//luminaire.init(false);
+}
+
+void registerNewNode(uint8_t id) {
+	Serial.print("Registering new node ");
+	Serial.println(id);
+    //Sorted insert in the nodesList
+    for(int i = 0; i<numTotalNodes+1; i++) {
+        //Find where to insert
+        if(nodesList[i] > id || nodesList[i] == 0) { //(0 mean a free space in the list)
+            //Insert here
+            //Moves all other elements down
+            uint8_t oldVal = nodesList[i];
+            for(int j = i+1; j<numTotalNodes+14; j++) {
+                uint8_t val = oldVal;
+                oldVal = nodesList[j];
+                nodesList[j] = val;
+                if(oldVal == 0)
+                    break;
+            }
+
+            //Puts the value
+            nodesList[i] = id;
+            break;
+        }
+    }
+    numTotalNodes++;
 }
 
 void irqHandler()

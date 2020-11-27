@@ -16,4 +16,6 @@ extern Luminaire luminaire;
 extern MainFSM mainFSM;
 extern LPF lpf;
 extern CalibrationFSM calibrationFSM;
+
+void registerNewNode(uint8_t id);
 #endif

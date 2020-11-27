@@ -28,7 +28,7 @@ public:
     void setState(CalibrationState state);
     void loop();
     
-    void setNodeReady(uint8_t nodeId, float data);
+    void incrementNodesReady();
 
     void runStateInit();
     void runStateWaitReady();
