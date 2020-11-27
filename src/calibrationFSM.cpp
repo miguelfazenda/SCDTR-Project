@@ -11,6 +11,13 @@ CalibrationFSM::CalibrationFSM()
     pwm[0]=20;pwm[1]=240;
     luxReads[0]=0;luxReads[1]=0;
     otherNodeLedOn=false;
+
+    gainMatrix = new float*[3];
+    for(int i = 0; i < 3; ++i)
+        gainMatrix[i] = new float[3];
+}
+CalibrationFSM::~CalibrationFSM() {
+    delete gainMatrix;
 }
 
 void CalibrationFSM::setState(CalibrationState state)

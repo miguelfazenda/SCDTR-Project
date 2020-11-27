@@ -31,7 +31,7 @@ void MainFSM::runStateWakeupWait(unsigned long timeSinceLastTransition) {
 
 void MainFSM::loop() {
     unsigned long currentTime = micros();
-    unsigned long timeSinceLastTransition = lastTransitionTime;
+    unsigned long timeSinceLastTransition = currentTime - lastTransitionTime;
 
     switch (state)
     {
@@ -42,10 +42,9 @@ void MainFSM::loop() {
         runStateWakeupWait(currentTime);
         break;
     case State::Calibrate:
-        
+        calibrationFSM.loop();
         break;
     case State::Run:
-        runStateRun();
         break;
     default:
         break;

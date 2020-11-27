@@ -22,8 +22,9 @@ private:
 public:
     unsigned int numNodesReady;
     bool otherNodeLedOn;
-    float gainMatrix[3][3]={0};
+    float** gainMatrix;
     CalibrationFSM();
+    ~CalibrationFSM();
     void setState(CalibrationState state);
     void loop();
     

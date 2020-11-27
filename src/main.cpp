@@ -29,9 +29,9 @@ volatile bool arduino_overflow = false;
 
 /*volatile*/ can_frame_stream cf_stream;
 
-#define STATE_INIT 0
+/*#define STATE_INIT 0
 #define STATE_ALGO 1
-int state = STATE_INIT;
+int state = STATE_INIT;*/
 
 void setup()
 {
@@ -91,13 +91,13 @@ void irqHandler()
 
 void loop()
 {
-	if(state == STATE_INIT) {
+	/*if(state == STATE_INIT) {
 		if(micros() > 2000000) {
 			//After 2 seconds, sends a message through the CAN bus for the other nodes to register it's presence
 			communication.sendBroadcastWakeup();
 			state = STATE_ALGO;
 		}
-	}
+	}*/
 
 	/*if (hubNode)
 	{*/
@@ -134,6 +134,7 @@ void loop()
 		}
 	}
 
+	mainFSM.loop();
 	//luminaire.loop();
 }
 
