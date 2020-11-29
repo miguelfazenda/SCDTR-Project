@@ -65,6 +65,11 @@ void setup()
 	//luminaire.init(false);
 }
 
+/**
+ * Called when a new node is known.
+ * 	It adds the node Id to the nodesList (keeps it sorted ascending)
+ * 	Also keeps the nodeIndexOnGainMatrix pointing to where each node belongs in the gainMatrix
+ */
 void registerNewNode(uint8_t id)
 {
 	Serial.print("Registering new node ");

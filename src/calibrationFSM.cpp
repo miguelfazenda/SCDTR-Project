@@ -19,6 +19,7 @@ CalibrationFSM::CalibrationFSM()
 
     done = false;
 }
+
 CalibrationFSM::~CalibrationFSM()
 {
     freeGainMatrix();
@@ -30,6 +31,11 @@ void CalibrationFSM::setState(CalibrationState state)
     lastTransitionTime = micros();
 }
 
+/**
+ * Reads the residual luminance, saves it on the gainMatrix.
+ *  Informs other nodes that it is ready(sending the reading alongside)
+ *  Next State -> WaitReady (waits for other nodes be ready)
+ */
 void CalibrationFSM::runStateInit()
 {
     //Allocates gain matrix
@@ -52,6 +58,17 @@ void CalibrationFSM::runStateInit()
 #endif
     setState(CalibrationState::WaitReady);
 }
+
+
+/**
+ *  Waits until all nodes inform they are ready
+ *   When they are, either increment the reading number (1st or 2nd reading for a certain LED on) or
+ *   increments which node should turn on the LED.
+ *   If it's this node's turn, turn on LED, inform others that it turned it on, and
+ *      Next State -> WaitTrasient (waits for LDR transient)
+ *   Else if it is another node's turn, go to the state where it waits for the message it turned it on
+ *      Next State -> WaitLedOn (waits for other nodes to turn on LED)
+ */
 void CalibrationFSM::runStateWaitReady()
 {
     analogWrite(LED_PIN, 0); //TODO isto aqui corre muitas vezes :/
@@ -98,6 +115,11 @@ void CalibrationFSM::runStateWaitReady()
     }
 }
 
+/**
+ * This state waits for the node who is in charge of turning on the LED to send a message informing of that.
+ *  When it is received otherNodeLedOn == true
+ *  Next State -> WaitTrasient (waits for LDR transient)
+ */
 void CalibrationFSM::runStateWaitLedOn()
 {
     //otherNodeLedOn is an Event.
@@ -112,11 +134,16 @@ void CalibrationFSM::runStateWaitLedOn()
         setState(CalibrationState::WaitTransient);
     }
 }
+
+/**
+ * In this state we wait for the transient of the LDR, and then read the luminance and store it on luxReads.
+ *  If it is the second reading calculates the gain. Then it sends to the other nodes it is ready (and the calculated gain).
+ */
 void CalibrationFSM::runStateWaitTrasient(unsigned long timeSinceLastTransition)
 {
     //After some time has passed, the measure should be stable
-    if (timeSinceLastTransition > 1000000)
-    { //falta o tau
+    if (timeSinceLastTransition > 1000000) //TODO falta o tau
+    {
         //Measure
         luxReads[luxReadNum] = luminaire.voltageToLux(luminaire.getVoltage());
 #ifdef CALIB_PRINTS
@@ -127,31 +154,31 @@ void CalibrationFSM::runStateWaitTrasient(unsigned long timeSinceLastTransition)
 #endif
         luxReadNum++; //increments the number of Luxreads
 
+        float gain = -1;
+
+        //If it is the second reading, calculates gain, and sets it on the gain matrix
         if (luxReadNum == 2)
         {
-            Serial.println(luxReads[1] - luxReads[0]);
-            Serial.println(pwm[1] - pwm[0]);
-            //setGain(nodeId, nodeLedOn, );
-            float gain = (float)(luxReads[1] - luxReads[0]) / (pwm[1] - pwm[0]);
+            gain = (float)(luxReads[1] - luxReads[0]) / (pwm[1] - pwm[0]);
 
             // Saves it on the gain matrix. (nodeLedOn+1 is because nodeLedOn counts from 0 to numTotalNodes-1, but 0 is for the residual luminance)
-            //gainMatrix[nodeIndexOnGainMatrix[nodeId]][nodeLedOn+1] = gain;
             setGain(nodeIndexOnGainMatrix[nodeId], nodeLedOn + 1, gain);
-            communication.sendCalibReady(gain);
-        }
-        else
-        {
-            communication.sendCalibReady(-1);
         }
 
+        // Inform other nodes that this node is ready. Along with this message, send the calculated gain (-1 if this isn't the second reading)
+        communication.sendCalibReady(gain);
         incrementNodesReady();
 #ifdef CALIB_PRINTS
         Serial.println("[CalibFSM] State = WaitReady");
 #endif
+        //Changes to the state where it waits for every node to be ready
         setState(CalibrationState::WaitReady);
     }
 }
 
+/**
+ * The loop function that calls each of the run functions depening on the state the machine is on.
+ */
 void CalibrationFSM::loop()
 {
     unsigned long currentTime = micros();
@@ -185,6 +212,10 @@ void CalibrationFSM::incrementNodesReady()
 #endif
 }
 
+/**
+ * This is called by Communication when it receives a gain from another node
+ *  It sets the gain for that sender, taking into account that the node who turned on the led is nodeLedOn 
+ */
 void CalibrationFSM::receivedGain(uint8_t sender, float gain)
 {
     //nodeLedOn + 1  -> when it is reading the residual, nodeLedOn = -1, so it writed on j=0
@@ -223,6 +254,9 @@ void CalibrationFSM::allocateGainMatrix()
     }
 }
 
+/**
+ * Sets a value on the gain matrix
+ */
 void CalibrationFSM::setGain(uint8_t i, uint8_t j, float gain)
 {
 #ifdef CALIB_PRINTS

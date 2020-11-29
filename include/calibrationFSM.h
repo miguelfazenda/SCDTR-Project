@@ -12,7 +12,8 @@ private:
 
     int nodeLedOn;
 
-    int luxReadNum; //flag that checks the number of the read  ( we need 2 read to compute the gain)
+    //counter that checks the number of the reading (we need 2 readings to compute the gain)
+    int luxReadNum;
     unsigned int pwm[2];
     
     float luxReads[2];

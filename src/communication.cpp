@@ -137,10 +137,10 @@ void Communication::sendCalibGain(float val)
     canMsg.can_dlc = 2;                               //num data bytes
     canMsg.data[0] = CAN_RESPONSE_GET_LUMINAIRE_DATA; //Message id
     canMsg.data[1] = luminaire->occupied;
-    /*canMsg.data[2] = lux;
-    canMsg.data[3] = pwm;*/
+    canMsg.data[2] = lux;
+    canMsg.data[3] = pwm;
 
-/*mcp2515->sendMessage(&canMsg);
+mcp2515->sendMessage(&canMsg);
 }
 
 void Communication::sendRequestLuminaireData(uint8_t destination)

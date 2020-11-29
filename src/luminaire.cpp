@@ -7,9 +7,9 @@
 #define LPF_SAMPLING_DELAY (CONTROL_DELAY / 80) // LPF sample 80 times in one control_delay
 
 #define LDR_SLOPE_M -0.9013f  //MIGUEL
-#define LDR_SLOPE_B 1.967f  //CHAGAS 48.5 LUX
+//#define LDR_SLOPE_B 1.967f  //CHAGAS 48.5 LUX
 //#define LDR_SLOPE_B 2.20f ZE		48.5 LUX
-//#define LDR_SLOPE_B 2.60f MIGUEL  48.5 LUX
+#define LDR_SLOPE_B 2.60f //MIGUEL  48.5 LUX
 
 //Static function
 float Luminaire::getVoltage() {

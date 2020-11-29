@@ -14,7 +14,10 @@ void MainFSM::setState(State state)
 }
 
 /**
- *  INIT - Wait 2 senconds, then send broadcast wakeup and 
+ *  INIT - Wait 2 senconds, then send broadcast wakeup.
+ *      It waits so that it doesn't broadcast imediatly after turning on,
+ *        which run the risk of other nodes not being ready wet to listen 
+ *      Next State -> WakeupWait
  */
 void MainFSM::runStateInit(unsigned long timeSinceLastTransition) {
     if(timeSinceLastTransition > 2000000) {
@@ -24,6 +27,11 @@ void MainFSM::runStateInit(unsigned long timeSinceLastTransition) {
     }
 }
 
+/**
+ * WakeupWait - Waits 2 seconds, then prints the list of nodes and goes to the calibration
+ *      This state is for it to have time to receive all the other node's Ids.
+ *      Next State -> Calibrate
+ */
 void MainFSM::runStateWakeupWait(unsigned long timeSinceLastTransition) {
     if(timeSinceLastTransition > 2000000) {
         Serial.println("[MainFSM] Finished waiting wakeup");
@@ -58,14 +66,13 @@ void MainFSM::loop() {
         calibrationFSM.loop();
         if(calibrationFSM.done) {
             setState(State::Run);
-            Serial.println(":DDDDDDDDDDD");
 
             //Print gain matrix
             for(int i = 0; i < calibrationFSM.gainMatrixSize; ++i) {
-                Serial.println();
+                Serial.println("\n");
                 for(int j = 0; j < calibrationFSM.gainMatrixSize; ++j) {
-                    Serial.print("\t");
-                    Serial.print(calibrationFSM.gainMatrix[i][j]);
+                    Serial.print("\t\t");
+                    Serial.print(calibrationFSM.gainMatrix[i][j], 8);
                 }
             }
         }
