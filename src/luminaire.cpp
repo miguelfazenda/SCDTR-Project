@@ -13,7 +13,7 @@
 
 //Static function
 float Luminaire::getVoltage() {
-	return (analogRead(LED_PIN))*5/1024.0f;
+	return (analogRead(LDR_PIN))*5/1024.0f;
 }
 
 void Luminaire::init(bool occupied) {

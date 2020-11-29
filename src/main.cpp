@@ -8,7 +8,8 @@
 
 uint8_t nodeId;
 uint8_t nodesList[10] = {0};
-int numTotalNodes;
+uint8_t nodeIndexOnGainMatrix[160];
+unsigned int numTotalNodes;
 
 Communication communication;
 Luminaire luminaire;
@@ -39,12 +40,14 @@ void setup()
 	Serial.begin(1000000);
 
 	// Change PWM frequency on PIN 9
-	TCCR1B = TCCR1B & B11111000 | B00000001;
+	TCCR1B = TCCR1B & (B11111000 | B00000001);
 
 	//Read from EEPROM the CAN id
 	nodeId = EEPROM.read(EEPROM_ADDR_CANID);
 	nodesList[0] = nodeId; //Add it to the list of Nodes
 	numTotalNodes = 1;
+
+	nodeIndexOnGainMatrix[0] = 0; //This means that if no led is on, it is saved on the line 0 of the matrix
 
 	Serial.print(" ------  Node ");
 	Serial.println(nodeId);
@@ -66,13 +69,13 @@ void registerNewNode(uint8_t id) {
 	Serial.print("Registering new node ");
 	Serial.println(id);
     //Sorted insert in the nodesList
-    for(int i = 0; i<numTotalNodes+1; i++) {
+    for(unsigned int i = 0; i<numTotalNodes+1; i++) {
         //Find where to insert
         if(nodesList[i] > id || nodesList[i] == 0) { //(0 mean a free space in the list)
             //Insert here
             //Moves all other elements down
             uint8_t oldVal = nodesList[i];
-            for(int j = i+1; j<numTotalNodes+14; j++) {
+            for(unsigned int j = i+1; j<numTotalNodes+14; j++) {
                 uint8_t val = oldVal;
                 oldVal = nodesList[j];
                 nodesList[j] = val;
@@ -86,6 +89,14 @@ void registerNewNode(uint8_t id) {
         }
     }
     numTotalNodes++;
+
+	//This makes sure the nodeIndexOnGainMatrix is right
+	//nodeIndexOnGainMatrix translates the nodeId to the index it is stored on the gainMatrix
+	//This first nodeId -> 1, the second nodeId -> 2, ...
+	for(unsigned int i = 0; i<numTotalNodes; i++) {
+		uint8_t nodeId = nodesList[i];
+        nodeIndexOnGainMatrix[nodeId] = i+1;
+    }
 }
 
 void irqHandler()

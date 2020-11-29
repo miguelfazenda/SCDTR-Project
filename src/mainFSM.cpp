@@ -56,8 +56,22 @@ void MainFSM::loop() {
         break;
     case State::Calibrate:
         calibrationFSM.loop();
+        if(calibrationFSM.done) {
+            setState(State::Run);
+            Serial.println(":DDDDDDDDDDD");
+
+            //Print gain matrix
+            for(int i = 0; i < calibrationFSM.gainMatrixSize; ++i) {
+                Serial.println();
+                for(int j = 0; j < calibrationFSM.gainMatrixSize; ++j) {
+                    Serial.print("\t");
+                    Serial.print(calibrationFSM.gainMatrix[i][j]);
+                }
+            }
+        }
         break;
     case State::Run:
+        //Serial.println(luminaire.getVoltage());
         break;
     default:
         break;

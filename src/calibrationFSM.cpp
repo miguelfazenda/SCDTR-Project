@@ -11,10 +11,14 @@ CalibrationFSM::CalibrationFSM()
     pwm[0]=20;pwm[1]=240;
     luxReads[0]=0;luxReads[1]=0;
     otherNodeLedOn=false;
+
+    gainMatrixSize = 0;
+    gainMatrix = nullptr;
+
+    done = false;
 }
 CalibrationFSM::~CalibrationFSM() {
-    delete gainMatrix;
-    //TODO delete gainMatrix sub vectors
+    freeGainMatrix();
 }
 
 void CalibrationFSM::setState(CalibrationState state)
@@ -24,26 +28,24 @@ void CalibrationFSM::setState(CalibrationState state)
 }
 
 void CalibrationFSM::runStateInit() {
+    //Allocates gain matrix
+    allocateGainMatrix();
+
+    //Reads residual luminance and saves it on the gainMatrix
     float residualReading = luminaire.voltageToLux(luminaire.getVoltage());
-    communication.sendCalibReady(residualReading);// Writes the mensage that has the residual reading
+    Serial.println(residualReading);
+    //gainMatrix[nodeIndexOnGainMatrix[nodeId]][0] = residualReading; //TODO confirmar isto!!!!!!!!
+    setGain(nodeIndexOnGainMatrix[nodeId], 0, residualReading);
+
+    //Sends that this node is ready for the next step
+    communication.sendCalibReady(residualReading);// Writes in the message that has the residual reading
     incrementNodesReady();
-
-    uint8_t maxNodeId = nodesList[numTotalNodes-1];
-    Serial.print("ALOCATED ");
-    Serial.print(maxNodeId);
-    Serial.print("X");
-    Serial.println(maxNodeId);
-
-    /*gainMatrix = new float*[maxNodeId+1];
-    for(int i = 0; i < maxNodeId+1; ++i) {
-        gainMatrix[i] = new float[maxNodeId+1];
-        for(int j = 0; j < maxNodeId+1; ++j)
-            gainMatrix[i][j] = 0.0f;
-    }*/
 
     nodeLedOn=-1; //Index from the node ID vector (-1 none of the leds are on)
 
+#ifdef CALIB_PRINTS
     Serial.println("[CalibFSM] State = WaitReady");
+#endif
     setState(CalibrationState::WaitReady);
 }
 void CalibrationFSM::runStateWaitReady() {
@@ -51,7 +53,9 @@ void CalibrationFSM::runStateWaitReady() {
 
     if (numNodesReady == numTotalNodes){ //every node is ready
         numNodesReady = 0; //resets the 
+#ifdef CALIB_PRINTS
         Serial.println("[CalibFSM] All nodes ready!");
+#endif
 
         if (nodeLedOn == -1 || luxReadNum == 2)
         {
@@ -59,9 +63,12 @@ void CalibrationFSM::runStateWaitReady() {
             luxReadNum = 0; //Reset reading number
         }
 
-        if(nodeLedOn >= numTotalNodes)
+        if(nodeLedOn >= (int)numTotalNodes)
         {
+#ifdef CALIB_PRINTS
             Serial.println("DONE calibrating!");
+#endif
+            done = true;
         }
         else if (nodesList[nodeLedOn] == nodeId)
         {
@@ -69,13 +76,17 @@ void CalibrationFSM::runStateWaitReady() {
             //  and then wait for the transient of the measure
             analogWrite(LED_PIN, pwm[luxReadNum]);
 	        communication.sendCalibLedOn(); //sends message that indicates that the led is on
+#ifdef CALIB_PRINTS
             Serial.println("[CalibFSM] State = WaitTransient");
+#endif
             setState(CalibrationState::WaitTransient);
         }
         else
         {
             //If it's some other node's turn to turn on LED, go to state that waits for it to turn it on
+#ifdef CALIB_PRINTS
             Serial.println("[CalibFSM] State = WaitLedOn");
+#endif
             setState(CalibrationState::WaitLedOn);
         }   
     }
@@ -88,7 +99,9 @@ void CalibrationFSM::runStateWaitLedOn(){
     {
         otherNodeLedOn = false; //Reset event bool
         //Go to state that waits for the transient of the measure 
+#ifdef CALIB_PRINTS
         Serial.println("[CalibFSM] State = WaitTransient");
+#endif
         setState(CalibrationState::WaitTransient);
     }
 }
@@ -97,22 +110,35 @@ void CalibrationFSM::runStateWaitTrasient(unsigned long timeSinceLastTransition)
     if(timeSinceLastTransition>1000000) { //falta o tau
         //Measure 
         luxReads[luxReadNum]= luminaire.voltageToLux(luminaire.getVoltage());
+#ifdef CALIB_PRINTS
         Serial.print("luxReads[");
         Serial.print(luxReadNum);
         Serial.print("] = ");
         Serial.println(luxReads[luxReadNum]);
+#endif
         luxReadNum++;//increments the number of Luxreads
 
-        //float calculatedGain
         if (luxReadNum == 2)
         {
-            //gainMatrix[nodeId][nodesList[nodeLedOn]] = (float)(luxReads[0]-luxReads[1]) / (pwm[0]-pwm[1]);
-            //communication.sendCalibGain(0/*gainMatrix[nodeId][nodesList[nodeLedOn]]*/);
+            Serial.println(luxReads[1]-luxReads[0]);
+            Serial.println(pwm[1]-pwm[0]);
+            //setGain(nodeId, nodeLedOn, );
+            float gain = (float)(luxReads[1]-luxReads[0]) / (pwm[1]-pwm[0]);
+
+            // Saves it on the gain matrix. (nodeLedOn+1 is because nodeLedOn counts from 0 to numTotalNodes-1, but 0 is for the residual luminance)
+            //gainMatrix[nodeIndexOnGainMatrix[nodeId]][nodeLedOn+1] = gain;
+            setGain(nodeIndexOnGainMatrix[nodeId], nodeLedOn+1, gain);
+            communication.sendCalibReady(gain);
+        }
+        else
+        {
+            communication.sendCalibReady(-1);
         }
 
-        communication.sendCalibReady(0);
         incrementNodesReady();
+#ifdef CALIB_PRINTS
         Serial.println("[CalibFSM] State = WaitReady");
+#endif
         setState(CalibrationState::WaitReady);
     }
 }
@@ -142,6 +168,54 @@ void CalibrationFSM::loop() {
 
 void CalibrationFSM::incrementNodesReady() {
     numNodesReady++;
+#ifdef CALIB_PRINTS
     Serial.print("numNodesReady = ");
     Serial.println(calibrationFSM.numNodesReady);
+#endif
+}
+
+void CalibrationFSM::receivedGain(uint8_t sender, float gain) {
+    //nodeLedOn + 1  -> when it is reading the residual, nodeLedOn = -1, so it writed on j=0
+    calibrationFSM.setGain(nodeIndexOnGainMatrix[sender], nodeLedOn + 1, gain);
+}
+
+
+void CalibrationFSM::freeGainMatrix() {
+    for(int i = 0; i < gainMatrixSize; ++i) {
+        delete gainMatrix[i];
+    }
+    gainMatrixSize = 0;
+    delete gainMatrix;
+}
+
+void CalibrationFSM::allocateGainMatrix() {
+    //Frees the previous gain matrix in case this isn't the first time running the calibration
+    freeGainMatrix();
+
+    gainMatrixSize = numTotalNodes+1;
+#ifdef CALIB_PRINTS
+    Serial.print("ALOCATED ");
+    Serial.print(gainMatrixSize);
+    Serial.print("X");
+    Serial.println(gainMatrixSize);
+#endif
+    //Alocates the matrix with the gains
+    gainMatrix = new float*[gainMatrixSize];
+    for(uint8_t i = 0; i < gainMatrixSize; ++i) {
+        gainMatrix[i] = new float[gainMatrixSize];
+        for(uint8_t j = 0; j < gainMatrixSize; ++j)
+            gainMatrix[i][j] = 0.0f;
+    }
+}
+
+void CalibrationFSM::setGain(uint8_t i, uint8_t j, float gain) {
+#ifdef CALIB_PRINTS
+    Serial.print("gainMatrix[");
+    Serial.print(i);
+    Serial.print(", ");
+    Serial.print(j);
+    Serial.print("] = ");
+    Serial.println(gain);
+#endif
+    gainMatrix[i][j] = gain;
 }

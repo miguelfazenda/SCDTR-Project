@@ -60,7 +60,19 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
         //Register the sender node ID
         registerNewNode(sender);
     }
-    else if(msgType == CAN_CALIB_READY){
+    else if(msgType == CAN_CALIB_READY) {
+        //if(frame->data[0] >= 0) {
+            //The ready message contains the gain calculated (if it is not time to send gain, it send a negative number)
+            Serial.print(sender);
+            Serial.print(" sent gain ");
+
+            float f = *((float*)frame->data);
+            Serial.println(f);
+            //Serial.println(frame->data[0]/*msg.value*/);
+            calibrationFSM.receivedGain(sender, f);
+        //}
+
+        //Sets that another node is ready
         Serial.println("Other Node Ready");
         calibrationFSM.incrementNodesReady();
     }
@@ -92,8 +104,20 @@ void Communication::sendCalibLedOn()
     mcp2515->sendMessage(&sendingFrame);
 }
 void Communication::sendCalibReady(float val){
-    Serial.println("[Comm] Sending Calib_Ready");
-    communication.writeFloat(canMessageId(0, CAN_CALIB_READY), val);
+    Serial.print("[Comm] Sending Calib_Ready with gain=");
+    Serial.println(val);
+    //communication.writeFloat(canMessageId(0, CAN_CALIB_READY), val);
+    sendingFrame.can_id = canMessageId(0, CAN_CALIB_READY);
+    sendingFrame.can_dlc = 4;
+
+    unsigned char *p = (unsigned char *)(&val);
+    sendingFrame.data[0] = p[0];
+    sendingFrame.data[1] = p[1];
+    sendingFrame.data[2] = p[2];
+    sendingFrame.data[3] = p[3];
+
+
+    mcp2515->sendMessage(&sendingFrame);
 }
 void Communication::sendCalibGain(float val){
     Serial.println("[Comm] Sending Calib_Gain");
