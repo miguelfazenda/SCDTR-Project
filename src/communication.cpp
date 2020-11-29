@@ -64,7 +64,8 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     else if (msgType == CAN_CALIB_READY)
     {
         float gainValue = *((float *)frame->data);
-        if(gainValue >= 0) {
+        if (gainValue >= 0)
+        {
             //The ready message contains the gain calculated (if it is not time to send gain, it send a negative number)
             Serial.print(sender);
             Serial.print(" sent gain ");

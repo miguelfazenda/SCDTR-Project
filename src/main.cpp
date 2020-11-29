@@ -65,38 +65,43 @@ void setup()
 	//luminaire.init(false);
 }
 
-void registerNewNode(uint8_t id) {
+void registerNewNode(uint8_t id)
+{
 	Serial.print("Registering new node ");
 	Serial.println(id);
-    //Sorted insert in the nodesList
-    for(unsigned int i = 0; i<numTotalNodes+1; i++) {
-        //Find where to insert
-        if(nodesList[i] > id || nodesList[i] == 0) { //(0 mean a free space in the list)
-            //Insert here
-            //Moves all other elements down
-            uint8_t oldVal = nodesList[i];
-            for(unsigned int j = i+1; j<numTotalNodes+14; j++) {
-                uint8_t val = oldVal;
-                oldVal = nodesList[j];
-                nodesList[j] = val;
-                if(oldVal == 0)
-                    break;
-            }
+	//Sorted insert in the nodesList
+	for (unsigned int i = 0; i < numTotalNodes + 1; i++)
+	{
+		//Find where to insert
+		if (nodesList[i] > id || nodesList[i] == 0) //(0 mean a free space in the list)
+		{
+			//Insert here
+			//Moves all other elements down
+			uint8_t oldVal = nodesList[i];
+			for (unsigned int j = i + 1; j < numTotalNodes + 14; j++)
+			{
+				uint8_t val = oldVal;
+				oldVal = nodesList[j];
+				nodesList[j] = val;
+				if (oldVal == 0)
+					break;
+			}
 
-            //Puts the value
-            nodesList[i] = id;
-            break;
-        }
-    }
-    numTotalNodes++;
+			//Puts the value
+			nodesList[i] = id;
+			break;
+		}
+	}
+	numTotalNodes++;
 
 	//This makes sure the nodeIndexOnGainMatrix is right
 	//nodeIndexOnGainMatrix translates the nodeId to the index it is stored on the gainMatrix
 	//This first nodeId -> 1, the second nodeId -> 2, ...
-	for(unsigned int i = 0; i<numTotalNodes; i++) {
+	for (unsigned int i = 0; i < numTotalNodes; i++)
+	{
 		uint8_t nodeId = nodesList[i];
-        nodeIndexOnGainMatrix[nodeId] = i+1;
-    }
+		nodeIndexOnGainMatrix[nodeId] = i + 1;
+	}
 }
 
 void irqHandler()
@@ -166,8 +171,8 @@ void loop()
 		cli();
 		has_data = cf_stream.get(frame);
 		sei();
-		
-		while(has_data)
+
+		while (has_data)
 		{
 			communication.received(&luminaire, &frame);
 
@@ -193,7 +198,7 @@ void readSerial()
 		{
 			luminaire.setOccupied(data == 1);
 		}
-		
+
 		//setLuxRef(data);
 	}
 }
