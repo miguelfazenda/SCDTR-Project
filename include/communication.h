@@ -11,6 +11,9 @@
 #define CAN_CALIB_LED_ON 3
 #define CAN_CALIB_GAIN 4
 
+#define CAN_HUB_GET_VALUE 10
+#define CAN_HUB_SET_OCCUPANCY 11
+
 class Communication
 {
 private:
@@ -45,6 +48,9 @@ public:
     void sendCalibLedOn();
     void sendCalibReady(float val);
     void sendCalibGain(float val);
+
+    void respondGetHubValue(uint8_t sender, uint8_t* data);
+    void sendHubGetValue(uint8_t destination, char valueType);
 };
 union my_can_msg {
     float value;

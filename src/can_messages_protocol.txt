@@ -1,5 +1,6 @@
-id  description             data
+id  description                         data
 1   Broadcast wakeup        
-2   Calib Ready             valor lido 
+2   Calib Ready                         valor lido 
 3   Calib Led On                 
-4   Calib Gain              ganho calculado
+4   Calib Gain                          ganho calculado
+10  Vai buscar o value a um node (CAN_RTR_FLAG caso seja request)   I, d ou outro

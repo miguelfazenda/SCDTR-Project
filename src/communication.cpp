@@ -23,6 +23,11 @@ void Communication::init(MCP2515 *mcp2515, can_frame_stream *cf_stream)
     mcp2515->reset();
     mcp2515->setBitrate(CAN_125KBPS, MCP_16MHZ);
     mcp2515->setNormalMode();
+
+    //Sets the filter to only allow messages where the destination is: 0 (broadcast) and nodeId (This node)
+    mcp2515->setFilterMask(MCP2515::MASK0, true, 0x00FF0000);
+    mcp2515->setFilter(MCP2515::RXF0, true, 0);
+    mcp2515->setFilter(MCP2515::RXF0, true, (canid_t)nodeId << 16);
 }
 MCP2515::ERROR Communication::writeFloat(uint32_t id, uint32_t val)
 {
@@ -88,11 +93,43 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     {
         //calibrationFSM.gainMatrix[nodeId][sender]=msg.value;
     }
-    /*else if (msgType == CALIB_READY)
+    else if (msgType == CAN_HUB_GET_VALUE)
     {
-        float valData;
-        mainFSM.calibrationFSM.SetNodeReady(sender, valData);
-    }*/
+        if(frame->can_id & CAN_RTR_FLAG)
+        {
+            //If this is a message request sent by the hub, respond
+            respondGetHubValue(sender, frame->data);
+        }
+        else
+        {
+            //If this is a message response sent to the hub, print it on the serial
+            Serial.println(":D");
+        }
+    }
+}
+
+void Communication::respondGetHubValue(uint8_t sender, uint8_t* data) {
+    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE);
+    
+    char valueType = data[0];
+    if(valueType == 'd') {
+        //Responds with the PWM of the luminaire
+        sendingFrame.can_dlc = 1;
+        sendingFrame.data[0] = 'I';
+        //Maybe send sendingFrame.data[1] = nodeId; ? to form the serial message easier?
+        sendingFrame.data[1] = 255;
+    }
+    
+    mcp2515->sendMessage(&sendingFrame);
+}
+
+void Communication::sendHubGetValue(uint8_t destination, char valueType) {
+    Serial.print("[Comm] Sending CAN_HUB_GET_VALUE to");
+    Serial.println(destination);
+    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE) | CAN_RTR_FLAG;
+    sendingFrame.can_dlc = 1;
+    sendingFrame.data[0] = valueType;
+    mcp2515->sendMessage(&sendingFrame);
 }
 
 void Communication::sendBroadcastWakeup()
