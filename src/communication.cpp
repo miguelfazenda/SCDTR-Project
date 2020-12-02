@@ -22,12 +22,19 @@ void Communication::init(MCP2515 *mcp2515, can_frame_stream *cf_stream)
     //Init CAN Bus
     mcp2515->reset();
     mcp2515->setBitrate(CAN_125KBPS, MCP_16MHZ);
-    mcp2515->setNormalMode();
+
 
     //Sets the filter to only allow messages where the destination is: 0 (broadcast) and nodeId (This node)
+    //Mask and filter for RXB0
     mcp2515->setFilterMask(MCP2515::MASK0, true, 0x00FF0000);
     mcp2515->setFilter(MCP2515::RXF0, true, 0);
-    mcp2515->setFilter(MCP2515::RXF0, true, (canid_t)nodeId << 16);
+    mcp2515->setFilter(MCP2515::RXF1, true, (canid_t)nodeId << 16);
+    //Mask and filter for RXB1
+    mcp2515->setFilterMask(MCP2515::MASK1, true, 0x00FF0000);
+    mcp2515->setFilter(MCP2515::RXF2, true, 0);
+    mcp2515->setFilter(MCP2515::RXF3, true, (canid_t)nodeId << 16);
+
+    mcp2515->setNormalMode();    
 }
 MCP2515::ERROR Communication::writeFloat(uint32_t id, uint32_t val)
 {
