@@ -56,14 +56,14 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 
     uint8_t msgType = frame->can_id & 0x000000FF; //GETs first 8 bits that have the type
     uint8_t sender = (frame->can_id & 0x0000FF00) >> 8;
-    my_can_msg msg;
+    /*my_can_msg msg;
     if (frame->can_dlc != 0)
     {
         for (size_t i = 0; i < 4; i++)
         {
             msg.bytes[i] = frame->data[i];
         }
-    }
+    }*/
 
     if (msgType == CAN_WAKEUP_BROADCAST)
     {
@@ -100,42 +100,65 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     {
         //calibrationFSM.gainMatrix[nodeId][sender]=msg.value;
     }
-    else if (msgType == CAN_HUB_GET_VALUE)
+    else if(msgType == CAN_HUB_GET_VALUE_REQUEST)
     {
-        if(frame->can_id & CAN_RTR_FLAG)
-        {
-            //If this is a message request sent by the hub, respond
-            respondGetHubValue(sender, frame->data);
-        }
-        else
-        {
-            //If this is a message response sent to the hub, print it on the serial
-            Serial.println(":D");
-        }
+        Serial.print("Received get value request from ");
+        Serial.print(sender);
+        Serial.print(" ");
+        Serial.println((char)frame->data[0]);
+        //If this is a message request sent by the hub, respond
+        respondGetHubValue(sender, frame->data);
+    }
+    else if (msgType == CAN_HUB_GET_VALUE_RESPONSE)
+    {
+        //If this is a message response sent to the hub, print it on the serial
+        Serial.print("Received get value response from ");
+        Serial.println(sender);
+
+        //TODO meter isto dentro do hub maybe?
+        //Print do do output deste comando
+        Serial.print((char)frame->data[0]);
+        Serial.print(' ');
+        Serial.print(sender);
+        Serial.print(' ');
+        Serial.print(frame->data[1]);
     }
 }
 
 void Communication::respondGetHubValue(uint8_t sender, uint8_t* data) {
-    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE);
-    
+    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE_RESPONSE);
+
+    Serial.println(data[0]);
+    Serial.println((char)data[0]);
+
     char valueType = data[0];
-    if(valueType == 'd') {
-        //Responds with the PWM of the luminaire
-        sendingFrame.can_dlc = 1;
-        sendingFrame.data[0] = 'I';
-        //Maybe send sendingFrame.data[1] = nodeId; ? to form the serial message easier?
+
+    sendingFrame.can_dlc = 2;
+
+    sendingFrame.data[0] = valueType;
+    sendingFrame.data[1] = 0;
+
+    switch(valueType) {
+    case 'I':
+        //Responds with the the iluminance read by the LDR
         sendingFrame.data[1] = 255;
+        break;
+    case 'd':
+        //Responds with the PWM of the luminaire
+        sendingFrame.data[1] = 255;
+        break;
     }
     
     mcp2515->sendMessage(&sendingFrame);
 }
 
 void Communication::sendHubGetValue(uint8_t destination, char valueType) {
-    Serial.print("[Comm] Sending CAN_HUB_GET_VALUE to");
+    Serial.print("[Comm] Sending CAN_HUB_GET_VALUE_REQUEST to ");
     Serial.println(destination);
-    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE) | CAN_RTR_FLAG;
+    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE_REQUEST)/* | CAN_RTR_FLAG*/;
     sendingFrame.can_dlc = 1;
     sendingFrame.data[0] = valueType;
+    Serial.println(sendingFrame.data[0]);
     mcp2515->sendMessage(&sendingFrame);
 }
 

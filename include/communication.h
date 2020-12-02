@@ -11,8 +11,8 @@
 #define CAN_CALIB_LED_ON 3
 #define CAN_CALIB_GAIN 4
 
-#define CAN_HUB_GET_VALUE 10
-#define CAN_HUB_SET_OCCUPANCY 11
+#define CAN_HUB_GET_VALUE_RESPONSE 10
+#define CAN_HUB_GET_VALUE_REQUEST 11
 
 class Communication
 {
