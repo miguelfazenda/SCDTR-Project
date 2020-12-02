@@ -191,6 +191,10 @@ void loop()
 	//luminaire.loop();
 }
 
+int checkGetArguments(String data);
+int checkSetArguments(String data, float *val);
+int checkOtherArguments(String data);
+
 /**
  * Reads if there was an input on the serial port, if so, change the lux reference
  */
@@ -202,130 +206,131 @@ void readSerial()
 	while (Serial.available())
 	{
 		data = Serial.readString();
+		switch (data[0])
+		{
+		case 'g': //command type get
+			destination = checkGetArguments(data);
+			if (destination == -1)
+			{
+				Serial.println("No command recognized!");
+				return;
+			}
+			if (destination == -2)
+			{
+				Serial.println("Destination doesn't exist");
+				return;
+			}
+			//start get process
+			if (val != -1) // if val argument is a float
+			{
+				//if(data[3])
+				communication.sendHubGetValue(destination, 'I');
+			}
+			else
+			{ //if val argument is 'T'
+			}
+
+			break;
+		case 'o': //command type occupancy
+			destination = checkSetArguments(data, &val);
+			if (destination == -1)
+			{
+				Serial.println("No command recognized!");
+				return;
+			}
+			if (destination == -2)
+			{
+				Serial.println("Destination doesn't exist");
+				return;
+			}
+			//start occupancy process
+
+			break;
+		case 'O': //command type set Occupied reference
+			destination = checkSetArguments(data, &val);
+			if (destination == -1)
+			{
+				Serial.println("No command recognized!");
+				return;
+			}
+			if (destination == -2)
+			{
+				Serial.println("Destination doesn't exist");
+				return;
+			}
+			//start set illuminance occupied process
+			break;
+		case 'U': //command type set unnocupied refference
+			destination = checkSetArguments(data, &val);
+			if (destination == -1)
+			{
+				Serial.println("No command recognized!");
+				return;
+			}
+			if (destination == -2)
+			{
+				Serial.println("Destination doesn't exist");
+				return;
+			}
+			//start illuminance unoccupied  process
+			break;
+		case 'c': //command type energy cost
+			destination = checkSetArguments(data, &val);
+			if (destination == -1)
+			{
+				Serial.println("No command recognized!");
+				return;
+			}
+			if (destination == -2)
+			{
+				Serial.println("Destination doesn't exist");
+				return;
+			}
+			//start energy cost process
+
+			break;
+		case 'r': //command type reset
+			if (data.length() != 1)
+			{
+				Serial.println("No command recognized!");
+				return;
+			}
+			//start reset process
+			break;
+		case 'b': //command type buffer
+			destination = checkOtherArguments(data);
+			if (destination == -1)
+			{
+				Serial.println("No command recognized!");
+				return;
+			}
+			if (destination == -2)
+			{
+				Serial.println("Destination doesn't exist");
+				return;
+			}
+			//starts buffer process
+			break; //command type stop/start
+		case 's':
+			destination = checkOtherArguments(data);
+			if (destination == -1)
+			{
+				Serial.println("No command recognized!");
+				return;
+			}
+			if (destination == -2)
+			{
+				Serial.println("Destination doesn't exist");
+				return;
+			}
+			//starts stop/start process
+			break;
+		default: //no messagem type recognized
+			Serial.println("No command recognized!");
+			return;
+			break;
+		}
 	}
-	switch (data[0])
-	{
-	case 'g': //command type get
-		destination = checkGetArguments(data);
-		if (destination == -1)
-		{
-			Serial.println("No command recognized!");
-			return;
-		}
-		if (destination == -2)
-		{
-			Serial.println("Destination doesn't exist");
-			return;
-		}
-		//start get process
-		if (val != -1) // if val argument is a float
-		{
-		}
-		else
-		{ //if val argument is 'T'
-		}
-
-		break;
-	case 'o': //command type occupancy
-		destination = checkSetArguments(data, &val);
-		if (destination == -1)
-		{
-			Serial.println("No command recognized!");
-			return;
-		}
-		if (destination == -2)
-		{
-			Serial.println("Destination doesn't exist");
-			return;
-		}
-		//start occupancy process
-
-		break;
-	case 'O': //command type set Occupied reference
-		destination = checkSetArguments(data, &val);
-		if (destination == -1)
-		{
-			Serial.println("No command recognized!");
-			return;
-		}
-		if (destination == -2)
-		{
-			Serial.println("Destination doesn't exist");
-			return;
-		}
-		//start set illuminance occupied process
-		break;
-	case 'U': //command type set unnocupied refference
-		destination = checkSetArguments(data, &val);
-		if (destination == -1)
-		{
-			Serial.println("No command recognized!");
-			return;
-		}
-		if (destination == -2)
-		{
-			Serial.println("Destination doesn't exist");
-			return;
-		}
-		//start illuminance unoccupied  process
-		break;
-	case 'c': //command type energy cost
-		destination = checkSetArguments(data, &val);
-		if (destination == -1)
-		{
-			Serial.println("No command recognized!");
-			return;
-		}
-		if (destination == -2)
-		{
-			Serial.println("Destination doesn't exist");
-			return;
-		}
-		//start energy cost process
-
-		break;
-	case 'r': //command type reset
-		if (data.length() != 1)
-		{
-			Serial.println("No command recognized!");
-			return;
-		}
-		//start reset process
-		break;
-	case 'b': //command type buffer
-		destination = checkOtherArguments(data);
-		if (destination == -1)
-		{
-			Serial.println("No command recognized!");
-			return;
-		}
-		if (destination == -2)
-		{
-			Serial.println("Destination doesn't exist");
-			return;
-		}
-		//starts buffer process
-		break; //command type stop/start
-	case 's':
-		destination = checkOtherArguments(data);
-		if (destination == -1)
-		{
-			Serial.println("No command recognized!");
-			return;
-		}
-		if (destination == -2)
-		{
-			Serial.println("Destination doesn't exist");
-			return;
-		}
-		//starts stop/start process
-		break;
-	default: //no messagem type recognized
-		Serial.println("No command recognized!");
-		return;
-		break;
-	}
-	return;
 }
 int checkGetArguments(String data)
 {
@@ -357,6 +362,7 @@ int checkGetArguments(String data)
 	}
 	return destination;
 }
+
 int checkSetArguments(String data, float *val)
 {
 	int idx_aux = 0;
@@ -392,6 +398,7 @@ int checkSetArguments(String data, float *val)
 	}
 	return destination;
 }
+
 int checkOtherArguments(String data)
 {
 	int destination = 0;
