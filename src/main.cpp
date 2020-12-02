@@ -197,144 +197,144 @@ void loop()
 void readSerial()
 {
 	String data;
-	int destination=0;
-	float val =0;
+	int destination = 0;
+	float val = 0;
 	while (Serial.available())
 	{
 		data = Serial.readString();
 	}
 	switch (data[0])
-    {
-    case 'g': //command type get
-		destination=checkGetArguments(data);
+	{
+	case 'g': //command type get
+		destination = checkGetArguments(data);
 		if (destination == -1)
 		{
-			Serial.println ("No command recognized!");
+			Serial.println("No command recognized!");
 			return;
 		}
 		if (destination == -2)
 		{
-			Serial.println ("Destination doesn't exist");
+			Serial.println("Destination doesn't exist");
 			return;
 		}
 		//start get process
 		if (val != -1) // if val argument is a float
 		{
-			
 		}
-		else{ //if val argument is 'T'
-
+		else
+		{ //if val argument is 'T'
 		}
-		
 
-        break;
-    case 'o': //command type occupancy
-		destination = checkSetArguments( data,&val);
+		break;
+	case 'o': //command type occupancy
+		destination = checkSetArguments(data, &val);
 		if (destination == -1)
 		{
-			Serial.println ("No command recognized!");
+			Serial.println("No command recognized!");
 			return;
 		}
 		if (destination == -2)
 		{
-			Serial.println ("Destination doesn't exist");
+			Serial.println("Destination doesn't exist");
 			return;
 		}
 		//start occupancy process
-		
-        break;
-    case 'O': 	//command type set Occupied reference
-		destination = checkSetArguments( data,&val);
+
+		break;
+	case 'O': //command type set Occupied reference
+		destination = checkSetArguments(data, &val);
 		if (destination == -1)
 		{
-			Serial.println ("No command recognized!");
+			Serial.println("No command recognized!");
 			return;
 		}
 		if (destination == -2)
 		{
-			Serial.println ("Destination doesn't exist");
+			Serial.println("Destination doesn't exist");
 			return;
 		}
 		//start set illuminance occupied process
-        break;
-    case 'U': //command type set unnocupied refference
-		destination = checkSetArguments( data,&val);
+		break;
+	case 'U': //command type set unnocupied refference
+		destination = checkSetArguments(data, &val);
 		if (destination == -1)
 		{
-			Serial.println ("No command recognized!");
+			Serial.println("No command recognized!");
 			return;
 		}
 		if (destination == -2)
 		{
-			Serial.println ("Destination doesn't exist");
+			Serial.println("Destination doesn't exist");
 			return;
 		}
 		//start illuminance unoccupied  process
-        break;
+		break;
 	case 'c': //command type energy cost
-		destination = checkSetArguments( data,&val);
+		destination = checkSetArguments(data, &val);
 		if (destination == -1)
 		{
-			Serial.println ("No command recognized!");
+			Serial.println("No command recognized!");
 			return;
 		}
 		if (destination == -2)
 		{
-			Serial.println ("Destination doesn't exist");
+			Serial.println("Destination doesn't exist");
 			return;
 		}
 		//start energy cost process
 
-        break;
-	case 'r':	//command type reset
+		break;
+	case 'r': //command type reset
 		if (data.length() != 1)
 		{
-			Serial.println ("No command recognized!");
+			Serial.println("No command recognized!");
 			return;
-		}		
+		}
 		//start reset process
-        break;
+		break;
 	case 'b': //command type buffer
-		destination=checkOtherArguments(data);
+		destination = checkOtherArguments(data);
 		if (destination == -1)
 		{
-			Serial.println ("No command recognized!");
+			Serial.println("No command recognized!");
 			return;
 		}
 		if (destination == -2)
 		{
-			Serial.println ("Destination doesn't exist");
+			Serial.println("Destination doesn't exist");
 			return;
 		}
-		//starts buffer process	
-        break; //command type stop/start
+		//starts buffer process
+		break; //command type stop/start
 	case 's':
-		destination=checkOtherArguments(data);
+		destination = checkOtherArguments(data);
 		if (destination == -1)
 		{
-			Serial.println ("No command recognized!");
+			Serial.println("No command recognized!");
 			return;
 		}
 		if (destination == -2)
 		{
-			Serial.println ("Destination doesn't exist");
+			Serial.println("Destination doesn't exist");
 			return;
 		}
 		//starts stop/start process
-        break;
-    default: //no messagem type recognized
-		Serial.println ("No command recognized!");
+		break;
+	default: //no messagem type recognized
+		Serial.println("No command recognized!");
 		return;
-        break;
-    }
+		break;
+	}
 	return;
 }
-int checkGetArguments(String data){
-	String arguments = "IdoOULxRcptevf";	//string that has every char thats corresponds to 
-											//one argument of comands type get
+int checkGetArguments(String data)
+{
+	String arguments = "IdoOULxRcptevf"; //string that has every char thats corresponds to
+										 //one argument of comands type get
 	int destination = 0;
-	if(data[1] !=  ' ' || data[3] !=  ' '){
-		return-1;
+	if (data[1] != ' ' || data[3] != ' ')
+	{
+		return -1;
 	}
 	for (size_t i = 0; i < data.length(); i++)
 	{
@@ -343,74 +343,77 @@ int checkGetArguments(String data){
 			return -1; //this value represents that the command doesnt exist
 		}
 	}
-	destination=(data.substring(3,data.length()-1)).toInt();
+	destination = (data.substring(3, data.length() - 1)).toInt();
 	if (destination == 0)
 	{
 		return -1;
 	}
 	for (size_t i = 0; i < numTotalNodes; i++) //checks if destination exists
+	{
+		if (destination != nodesList[i])
 		{
-			if (destination != nodesList[i])
-			{
-				return -2;
-			}
+			return -2;
 		}
+	}
 	return destination;
 }
-int checkSetArguments(String data,float* val){
-	int idx_aux=0;
-	int destination=0;
+int checkSetArguments(String data, float *val)
+{
+	int idx_aux = 0;
+	int destination = 0;
 	if (data[1] != ' ')
+	{
+		return -1;
+	}
+	idx_aux = data.indexOf(' ', 2);
+	if (idx_aux == -1)
+	{
+		return -1;
+	}
+	destination = (data.substring(2, idx_aux - 1)).toInt();
+	if (data[idx_aux + 1] == 'T' && data.length() == idx_aux + 2)
+	{
+		*val = -1; //argument isn't a float,
+	}
+	else
+	{
+		*val = (data.substring(idx_aux + 1, data.length() - 1)).toFloat();
+	}
+	if (destination == 0 || *val == 0)
+	{
+		return -1;
+	}
+	for (size_t i = 0; i < numTotalNodes; i++) //checks if destination exists
+	{
+		if (destination != nodesList[i])
 		{
-			return-1;
+			return -2;
 		}
-		idx_aux=data.indexOf(' ',2);
-		if (idx_aux == -1)
-		{
-			return-1;
-		}
-		destination=(data.substring(2,idx_aux-1)).toInt();
-		if (data[idx_aux+1] == 'T' && data.length()==idx_aux+2)
-		{
-			*val=-1; //argument isn't a float,
-		}
-		else
-		{
-			*val=(data.substring(idx_aux+1,data.length()-1)).toFloat();
-		}	
-		if (destination == 0 || *val == 0)
-		{
-			return-1;
-		}
-		for (size_t i = 0; i < numTotalNodes; i++) //checks if destination exists
-		{
-			if (destination != nodesList[i])
-			{
-				return -2;
-			}
-		}
-		return destination;
+	}
+	return destination;
 }
-int checkOtherArguments(String data){
-	int destination=0;
-	if(data[1] !=  ' ' || data[3] !=  ' '){
-			return-1;
-		}
-		else if (data[2] !=  'I' || data[2] !=  'd')
+int checkOtherArguments(String data)
+{
+	int destination = 0;
+	if (data[1] != ' ' || data[3] != ' ')
+	{
+		return -1;
+	}
+	else if (data[2] != 'I' || data[2] != 'd')
+	{
+		return -1;
+	}
+	destination = (data.substring(3, data.length() - 1)).toInt();
+	if (destination == 0)
+	{
+		return -1;
+	}
+	for (size_t i = 0; i < numTotalNodes; i++) //checks if destination exists
+	{
+		if (destination != nodesList[i])
 		{
-			return-1;
+			return -2;
 		}
-		destination=(data.substring(3,data.length()-1)).toInt();
-		if (destination == 0)
-		{
-			return-1;
-		}
-		for (size_t i = 0; i < numTotalNodes; i++) //checks if destination exists
-		{
-			if (destination != nodesList[i])
-			{
-				return -2;
-			}
-		}
-		return destination;
+	}
+	return destination;
 }
