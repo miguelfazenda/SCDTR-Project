@@ -17,7 +17,7 @@ MainFSM mainFSM;
 LPF lpf;
 CalibrationFSM calibrationFSM;
 
-#define EEPROM_ADDR_CANID 0x00 //Address of where to get the can id of this arduino on the EEPROM
+#define EEPROM_ADDR_NODEID 0x00 //Address of where to get the can id of this arduino on the EEPROM
 
 MCP2515 mcp2515(10);
 
@@ -30,10 +30,6 @@ volatile bool arduino_overflow = false;
 
 /*volatile*/ can_frame_stream cf_stream;
 
-/*#define STATE_INIT 0
-#define STATE_ALGO 1
-int state = STATE_INIT;*/
-
 void setup()
 {
 	// initialize serial communications at 1Mbps
@@ -43,13 +39,13 @@ void setup()
 	TCCR1B = TCCR1B & (B11111000 | B00000001);
 
 	//Read from EEPROM the CAN id
-	nodeId = EEPROM.read(EEPROM_ADDR_CANID);
+	nodeId = EEPROM.read(EEPROM_ADDR_NODEID);
 	nodesList[0] = nodeId; //Add it to the list of Nodes
 	numTotalNodes = 1;
 
 	nodeIndexOnGainMatrix[0] = 0; //This means that if no led is on, it is saved on the line 0 of the matrix
 
-	Serial.print(" ------  Node ");
+	Serial.print("\n ------  Node ");
 	Serial.println(nodeId);
 	Serial.println();
 
