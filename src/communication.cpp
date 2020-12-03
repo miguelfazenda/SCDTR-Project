@@ -107,7 +107,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
         Serial.print(" ");
         Serial.println((char)frame->data[0]);
         //If this is a message request sent by the hub, respond
-        respondGetHubValue(sender, frame->data);
+        sendResponseGetHubValue(sender, frame->data);
     }
     else if (msgType == CAN_HUB_GET_VALUE_RESPONSE)
     {
@@ -125,7 +125,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     }
 }
 
-void Communication::respondGetHubValue(uint8_t sender, uint8_t* data) {
+void Communication::sendResponseGetHubValue(uint8_t sender, uint8_t* data) {
     sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE_RESPONSE);
 
     Serial.println(data[0]);
@@ -152,10 +152,10 @@ void Communication::respondGetHubValue(uint8_t sender, uint8_t* data) {
     mcp2515->sendMessage(&sendingFrame);
 }
 
-void Communication::sendHubGetValue(uint8_t destination, char valueType) {
+void Communication::sendRequestHubGetValue(uint8_t destination, char valueType) {
     Serial.print("[Comm] Sending CAN_HUB_GET_VALUE_REQUEST to ");
     Serial.println(destination);
-    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE_REQUEST)/* | CAN_RTR_FLAG*/;
+    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE_REQUEST);
     sendingFrame.can_dlc = 1;
     sendingFrame.data[0] = valueType;
     Serial.println(sendingFrame.data[0]);

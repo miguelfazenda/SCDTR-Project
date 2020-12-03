@@ -73,7 +73,7 @@ void registerNewNode(uint8_t id)
 	Serial.print("Registering new node ");
 	Serial.println(id);
 	//Sorted insert in the nodesList
-	for (unsigned int i = 0; i < numTotalNodes + 1; i++)
+	for (uint8_t i = 0; i < numTotalNodes + 1; i++)
 	{
 		//Find where to insert
 		if (nodesList[i] > id || nodesList[i] == 0) //(0 mean a free space in the list)
@@ -81,7 +81,7 @@ void registerNewNode(uint8_t id)
 			//Insert here
 			//Moves all other elements down
 			uint8_t oldVal = nodesList[i];
-			for (unsigned int j = i + 1; j < numTotalNodes + 1; j++)
+			for (uint8_t j = i + 1; j < numTotalNodes + 1; j++)
 			{
 				uint8_t val = oldVal;
 				oldVal = nodesList[j];
@@ -100,7 +100,7 @@ void registerNewNode(uint8_t id)
 	//This makes sure the nodeIndexOnGainMatrix is right
 	//nodeIndexOnGainMatrix translates the nodeId to the index it is stored on the gainMatrix
 	//This first nodeId -> 1, the second nodeId -> 2, ...
-	for (unsigned int i = 0; i < numTotalNodes; i++)
+	for (uint8_t i = 0; i < numTotalNodes; i++)
 	{
 		uint8_t nodeId = nodesList[i];
 		nodeIndexOnGainMatrix[nodeId] = i;
@@ -221,7 +221,7 @@ void readSerial()
 			valueType = data[2];
 			Serial.print("valueType = ");
 			Serial.println(valueType);
-			communication.sendHubGetValue(destination, valueType);
+			communication.sendRequestHubGetValue(destination, valueType);
 
 			break;
 		case 'o': //command type occupancy

@@ -49,8 +49,8 @@ public:
     void sendCalibReady(float val);
     void sendCalibGain(float val);
 
-    void respondGetHubValue(uint8_t sender, uint8_t* data);
-    void sendHubGetValue(uint8_t destination, char valueType);
+    void sendResponseGetHubValue(uint8_t sender, uint8_t* data);
+    void sendRequestHubGetValue(uint8_t destination, char valueType);
 };
 union my_can_msg {
     float value;
