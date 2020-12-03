@@ -17,8 +17,6 @@ MainFSM mainFSM;
 LPF lpf;
 CalibrationFSM calibrationFSM;
 
-#define EEPROM_ADDR_NODEID 0x00 //Address of where to get the can id of this arduino on the EEPROM
-
 MCP2515 mcp2515(10);
 
 void readSerial();
@@ -29,6 +27,9 @@ volatile bool mcp2515_overflow = false;
 volatile bool arduino_overflow = false;
 
 /*volatile*/ can_frame_stream cf_stream;
+
+bool used_RX0 = false;
+bool used_RX1 = false;
 
 void setup()
 {
@@ -41,7 +42,7 @@ void setup()
 	numTotalNodes = 0;
 
 	//Read from EEPROM the CAN id
-	nodeId = EEPROM.read(EEPROM_ADDR_NODEID);
+	nodeId = EEPROM.read(EEPROM_ADDR_NODEID);	
 	//Registers this node's id on the nodesList array
 	registerNewNode(nodeId);
 
@@ -60,7 +61,7 @@ void setup()
 	SPI.usingInterrupt(0);
 	communication.init(&mcp2515, &cf_stream);
 
-	//luminaire.init(false);
+	luminaire.init(false);
 }
 
 /**
@@ -109,11 +110,13 @@ void registerNewNode(uint8_t id)
 
 void irqHandler()
 {
+
 	can_frame frm;
 	uint8_t irq = mcp2515.getInterrupts();
 	//check messages in buffer 0
 	if (irq & MCP2515::CANINTF_RX0IF)
 	{
+		used_RX0 = true;
 		mcp2515.readMessage(MCP2515::RXB0, &frm);
 		/*Serial.print("BF0 ");
 		Serial.print(frm.can_id);*/
@@ -123,6 +126,7 @@ void irqHandler()
 	//check messages in buffer 1
 	if (irq & MCP2515::CANINTF_RX1IF)
 	{
+		used_RX1 = true;
 		mcp2515.readMessage(MCP2515::RXB1, &frm);
 		/*Serial.print("BF1 ");
 		Serial.print(frm.can_id);*/
@@ -270,6 +274,12 @@ void readSerial()
 				break;
 			//starts stop/start process
 			break;
+		case 'D':
+			Serial.println("------FLAGS-------");
+			Serial.println(used_RX0);
+			Serial.println(used_RX1);
+			break;
+
 		default: //no messagem type recognized
 			Serial.println("No command recognized!");
 			return;

@@ -11,6 +11,10 @@
 
 #define MAX_NODE_ID 160
 
+#define EEPROM_ADDR_SLOPEM 0 //Address of where to get M of this arduino on the EEPROM
+#define EEPROM_ADDR_SLOPEB 4 //Address of where to get B can id of this arduino on the EEPROM
+#define EEPROM_ADDR_NODEID 8 //Address of where to get the can id of this arduino on the EEPROM
+
 //The CAN id of this arduino (uint8_t is one byte)
 extern uint8_t nodeId;
 extern uint8_t nodesList[MAX_NUM_NODES];
