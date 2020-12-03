@@ -36,9 +36,10 @@ void MainFSM::runStateWakeupWait(unsigned long timeSinceLastTransition) {
     if(timeSinceLastTransition > 2000000) {
         Serial.println("[MainFSM] Finished waiting wakeup");
         
+        //TODO talvez as linhas e colunas estejam trocadas
         //Prints list of nodes
         Serial.print("Nodes list: [");
-        for(int i = 0; i<numTotalNodes; i++) {
+        for(uint8_t i = 0; i<numTotalNodes; i++) {
             if(i > 0)
                 Serial.print(", ");
             Serial.print(nodesList[i]);
@@ -67,14 +68,10 @@ void MainFSM::loop() {
         if(calibrationFSM.done) {
             setState(State::Run);
 
+
+
             //Print gain matrix
-            for(int i = 0; i < calibrationFSM.gainMatrixSize; ++i) {
-                Serial.println("\n");
-                for(int j = 0; j < calibrationFSM.gainMatrixSize; ++j) {
-                    Serial.print("\t\t");
-                    Serial.print(calibrationFSM.gainMatrix[i][j], 8);
-                }
-            }
+            calibrationFSM.printResidualAndGainMatrix();
         }
         break;
     case State::Run:

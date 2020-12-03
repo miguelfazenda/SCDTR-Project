@@ -7,9 +7,9 @@
 #include "glob.h"
 
 uint8_t nodeId;
-uint8_t nodesList[10] = {0};
-uint8_t nodeIndexOnGainMatrix[160];
-unsigned int numTotalNodes;
+uint8_t nodesList[MAX_NUM_NODES] = {0};
+uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1] = {0};
+uint8_t numTotalNodes;
 
 Communication communication;
 Luminaire luminaire;
@@ -38,10 +38,12 @@ void setup()
 	// Change PWM frequency on PIN 9
 	TCCR1B = TCCR1B & (B11111000 | B00000001);
 
+	numTotalNodes = 0;
+
 	//Read from EEPROM the CAN id
 	nodeId = EEPROM.read(EEPROM_ADDR_NODEID);
-	nodesList[0] = nodeId; //Add it to the list of Nodes
-	numTotalNodes = 1;
+	//Registers this node's id on the nodesList array
+	registerNewNode(nodeId);
 
 	nodeIndexOnGainMatrix[0] = 0; //This means that if no led is on, it is saved on the line 0 of the matrix
 
@@ -79,7 +81,7 @@ void registerNewNode(uint8_t id)
 			//Insert here
 			//Moves all other elements down
 			uint8_t oldVal = nodesList[i];
-			for (unsigned int j = i + 1; j < numTotalNodes + 14; j++)
+			for (unsigned int j = i + 1; j < numTotalNodes + 1; j++)
 			{
 				uint8_t val = oldVal;
 				oldVal = nodesList[j];
@@ -101,7 +103,7 @@ void registerNewNode(uint8_t id)
 	for (unsigned int i = 0; i < numTotalNodes; i++)
 	{
 		uint8_t nodeId = nodesList[i];
-		nodeIndexOnGainMatrix[nodeId] = i + 1;
+		nodeIndexOnGainMatrix[nodeId] = i;
 	}
 }
 

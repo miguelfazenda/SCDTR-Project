@@ -83,7 +83,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
             Serial.print(" sent gain ");
             Serial.println(gainValue);
 
-            calibrationFSM.receivedGain(sender, gainValue);
+            calibrationFSM.receivedGainOrResidual(sender, gainValue);
         }
 
         //Sets that another node is ready
