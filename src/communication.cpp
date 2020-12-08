@@ -21,7 +21,7 @@ void Communication::init(MCP2515 *mcp2515, can_frame_stream *cf_stream)
 
     //Init CAN Bus
     mcp2515->reset();
-    mcp2515->setBitrate(CAN_125KBPS, MCP_16MHZ);
+    mcp2515->setBitrate(CAN_1000KBPS, MCP_16MHZ);
 
 
     //Sets the filter to only allow messages where the destination is: 0 (broadcast) and nodeId (This node)
@@ -126,7 +126,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 }
 
 void Communication::sendResponseGetHubValue(uint8_t sender, uint8_t* data) {
-    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE_RESPONSE);
+    sendingFrame.can_id = canMessageId(sender, CAN_HUB_GET_VALUE_RESPONSE);
 
     Serial.println(data[0]);
     Serial.println((char)data[0]);
@@ -155,7 +155,7 @@ void Communication::sendResponseGetHubValue(uint8_t sender, uint8_t* data) {
 void Communication::sendRequestHubGetValue(uint8_t destination, char valueType) {
     Serial.print("[Comm] Sending CAN_HUB_GET_VALUE_REQUEST to ");
     Serial.println(destination);
-    sendingFrame.can_id = canMessageId(0, CAN_HUB_GET_VALUE_REQUEST);
+    sendingFrame.can_id = canMessageId(destination, CAN_HUB_GET_VALUE_REQUEST);
     sendingFrame.can_dlc = 1;
     sendingFrame.data[0] = valueType;
     Serial.println(sendingFrame.data[0]);
