@@ -22,11 +22,15 @@ extern uint8_t nodesList[MAX_NUM_NODES];
 extern uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1];
 extern uint8_t numTotalNodes;
 
+extern unsigned int lastResetTime; //time since last restart
+
 extern Communication communication;
 extern Luminaire luminaire;
 extern MainFSM mainFSM;
 extern LPF lpf;
 extern CalibrationFSM calibrationFSM;
+
+
 
 void registerNewNode(uint8_t id);
 #endif

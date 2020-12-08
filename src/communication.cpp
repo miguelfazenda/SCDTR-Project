@@ -133,6 +133,7 @@ void Communication::sendResponseGetHubValue(uint8_t sender, uint8_t* data) {
 
     char valueType = data[0];
 
+
     sendingFrame.can_dlc = 2;
 
     sendingFrame.data[0] = valueType;
@@ -147,8 +148,56 @@ void Communication::sendResponseGetHubValue(uint8_t sender, uint8_t* data) {
         //Responds with the PWM of the luminaire
         sendingFrame.data[1] = 255;
         break;
+    case 'o':
+        //Responds with current occupancy of the Node
+        sendingFrame.data[1] = 255;
+        break;
+    case 'O':
+        //Responds with the Lower bound of Occupied state of the node
+        sendingFrame.data[1] = 255;
+        break;
+    case 'U':
+        //Responds with the Lower bound of Unccupied state of the node
+        sendingFrame.data[1] = 255;
+        break;
+    case 'L':
+        //Responds with the illuminance lower bound of the node
+        sendingFrame.data[1] = 255;
+        break;
+    case 'x':
+        //Responds with the external illuminance of the node
+        sendingFrame.data[1] = 255;
+        break;
+    case 'r':
+        //Responds with the illuminance controlreference
+        sendingFrame.data[1] = 255;
+        break;
+    case 'c':
+        //Responds with the current energy cost
+        sendingFrame.data[1] = 255;
+        break;
+    case 'p':
+        //Responds with the power conssuption of the node
+        sendingFrame.data[1] = 255;
+        break;
+
+    case 't':
+        //Responds with the time elapsed since last reset
+        sendingFrame.data[1] = micros()-lastResetTime;
+        break;
+    case 'e':
+        //Responds with the accumulated energy in the node since last reset
+        sendingFrame.data[1] = 255;
+        break;
+    case 'v':
+        //Responds with the accumulated visibility error in the node since last reset
+        sendingFrame.data[1] = 255;
+        break;
+    case 'f':
+        //Responds with the accumulated flicker error in the nodesince last reset
+        sendingFrame.data[1] = 255;
+        break;
     }
-    
     mcp2515->sendMessage(&sendingFrame);
 }
 
