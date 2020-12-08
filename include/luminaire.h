@@ -18,6 +18,8 @@ private:
     int luxRef;
     const int LUX_OCCUPIED = 20;
     const int LUX_NON_OCCUPIED = 10;
+    float ldrSlopeB = 0.0f;
+    float ldrSlopeM = 0.0f;
 
     // LUX/PWM
     float systemGain;
