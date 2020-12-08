@@ -207,6 +207,7 @@ void readSerial()
 	String data;
 	int destination = 0;
 	float val = 0;
+	int flagT = 0;//flag that indicates if the get response should be for all the system(flagT=1) or not
 
 	//On get commands this stores what type of value. I - iluminance, d - dutycycle
 	char valueType;
@@ -217,16 +218,19 @@ void readSerial()
 		switch (data[0])
 		{
 		case 'g': //command type get
-			destination = checkGetArguments(data);
-			if(checkAndPrintCommandError(destination))
+			destination = checkGetArguments(data, &flagT);
+			if(checkAndPrintCommandError(destination) && flagT != 1)
 				break;
 			
 			//start get process
 			valueType = data[2];
 			Serial.print("valueType = ");
 			Serial.println(valueType);
-			communication.sendRequestHubGetValue(destination, valueType);
-
+			if(flagT != 1){ //last argument inst T (T is a flag that indicates the response should be for all the system)
+				communication.sendRequestHubGetValue(destination, valueType);
+				break;
+			}
+			//falta meter aqui função para quando ultimo argumento é 'T'
 			break;
 		case 'o': //command type occupancy
 			destination = checkSetArguments(data, &val);
@@ -320,24 +324,34 @@ bool checkIfNodeExists(uint8_t destination)
 	return destinationExists;
 }
 
-int checkGetArguments(String data)
+int checkGetArguments(String data, int* flagT)
 {
 	String arguments = "IdoOULxRcptevf"; //string that has every char thats corresponds to
 										 //one argument of comands type get
+	String argumentsWithT = "pevf";		//string that has every char thats corresponds to
+										 //one argument of comands type get that allows the last argument to be 'T'
 	uint8_t destination = 0;
 	bool validCommand = false;
 	if (data[1] != ' ' || data[3] != ' ')
 	{
 		return -1;
 	}
-	for (size_t i = 0; i < data.length(); i++)
+	for (size_t i = 0; i < arguments.length(); i++)
 	{
 		if (data[2] == arguments[i])
 		{
 			validCommand = true;
 			break;
 		}
+	} 
+	for (size_t i = 0; i < argumentsWithT.length(); i++)
+	{
+		if(data[2] == argumentsWithT[i] && data[4] == 'T' && data.length() == 5){
+			*flagT=1;//Value that corresponts to the command beeing valid and the last argument is 'T'
+			return 0;
+		}
 	}
+	
 
 	if(!validCommand)
 		return -1; //this value represents that the command doesnt exist
@@ -364,14 +378,8 @@ int checkSetArguments(String data, float *val)
 		return -1;
 	}
 	destination = (data.substring(2, idx_aux - 1)).toInt();
-	if (data[idx_aux + 1] == 'T' && data.length() == idx_aux + 2)
-	{
-		*val = -1; //argument isn't a float,
-	}
-	else
-	{
-		*val = (data.substring(idx_aux + 1, data.length() - 1)).toFloat();
-	}
+	*val = (data.substring(idx_aux + 1, data.length() - 1)).toFloat();
+
 	if (destination == 0 || *val == 0)
 	{
 		return -1;
