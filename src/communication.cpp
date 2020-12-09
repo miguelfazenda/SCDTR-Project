@@ -183,7 +183,7 @@ void Communication::sendResponseGetHubValue(uint8_t sender, uint8_t* data) {
 
     case 't':
         //Responds with the time elapsed since last reset
-        sendingFrame.data[1] = micros()-lastResetTime;
+        sendingFrame.data[1] = micros();//-lastResetTime;
         break;
     case 'e':
         //Responds with the accumulated energy in the node since last reset

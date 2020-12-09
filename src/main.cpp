@@ -193,7 +193,7 @@ void loop()
 	//luminaire.loop();
 }
 
-int checkGetArguments(String data);
+int checkGetArguments(String data, int* flagT);
 int checkSetArguments(String data, float *val);
 int checkOtherArguments(String data);
 bool checkIfNodeExists(uint8_t destination);

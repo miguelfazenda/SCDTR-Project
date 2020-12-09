@@ -22,7 +22,7 @@ extern uint8_t nodesList[MAX_NUM_NODES];
 extern uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1];
 extern uint8_t numTotalNodes;
 
-extern unsigned int lastResetTime; //time since last restart
+//extern unsigned int lastResetTime; //time since last restart
 
 extern Communication communication;
 extern Luminaire luminaire;
