@@ -6,6 +6,7 @@
 #include "mainFSM.h"
 #include "calibrationFSM.h"
 #include "lpf.h"
+#include "serialComm.h"
 
 #define CALIB_PRINTS
 
@@ -29,7 +30,7 @@ extern Luminaire luminaire;
 extern MainFSM mainFSM;
 extern LPF lpf;
 extern CalibrationFSM calibrationFSM;
-
+extern SerialComm serialComm;
 
 
 void registerNewNode(uint8_t id);
