@@ -7,49 +7,6 @@ union FloatTo4Bytes
 	uint32_t value;
 };
 
-SerialComm::SerialComm() 
-{
-
-
-}
-
-void SerialComm::sendFrequentData() 
-{
-	float iluminance = 10.0f; //TODO replace with luminance
-	uint8_t pwm = 128;
-
-	SerialFrequentDataPacket frequentDataPacket(nodeId, iluminance, pwm);
-	frequentDataPacket.sendOnSerial();	
-}
-
-void SerialComm::readCommandGet(uint8_t getParam, uint8_t destination)
-{
-    Serial.print("GET RECEIVED  ");
-    Serial.print((char) getParam);
-    Serial.print("  ");
-    Serial.println(destination);
-}
-
-void SerialComm::readCommandSet(uint8_t setParam, uint8_t destination, float value)
-{
-    Serial.print("SET RECEIVED  ");
-    Serial.print((char) setParam);
-    Serial.print("  ");
-    Serial.print(destination);
-    Serial.print("  ");
-    Serial.println(value);
-
-    if(destination == nodeId)
-    {
-        //Destination was this node
-        
-    }
-    else
-    {
-        //Transmit to node
-    }
-}
-
 /**
  * Reads if there was an input on the serial port, if so, change the lux reference
  */
@@ -73,6 +30,9 @@ void SerialComm::readSerial()
 
 			if(command.cmd == 'D')
 			{
+				//Store current time, so we know when it stopped receiving the response in some time
+				pcDiscoveryHadResponse = true;
+
 				//Received response from 'PC Discovery', which means it is now a hub node
 				if(hubNode != nodeId)
 				{
@@ -224,4 +184,26 @@ void SerialComm::sendTotalIfAllValueForTotalReceived()
 		//Finished running the 'total command'
 		runningTotalCommand = false;
 	}
+}
+
+//PC Discovery - sends message to see if pc responds
+void SerialComm::sendPCDiscovery()
+{
+	if(hubNode == nodeId)
+	{
+		// If it's a hub node, it decides it is no longer connected to a PC if the computer
+		//   didn't respond to the last descovery message
+		if(!pcDiscoveryHadResponse)
+		{
+			hubNode = 0;
+			communication.sendBroadcastNoLongerIsHubNode();
+		}
+	}
+	
+	// Sets as false so we check next time if it was changed to true
+	pcDiscoveryHadResponse = false;
+
+	Serial.write(255);
+	Serial.write('D');
+	Serial.flush();
 }

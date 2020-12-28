@@ -44,7 +44,7 @@ void setup()
 	Serial.begin(1000000);
 
 	// TODO Retirar
-	//pinMode(LED_BUILTIN, OUTPUT);
+	// pinMode(LED_BUILTIN, OUTPUT);
 	// TODO Retirar
 
 	// Change PWM frequency on PIN 9
@@ -195,13 +195,11 @@ void loop()
 	unsigned long timeNow = millis();
 	if(timeNow - timeLastSentFrequentData > 2*1000)
 	{
-		//PC Discovery - sends message to see if pc responds
-		Serial.write(255);
-		Serial.write('D');
-		Serial.flush();
+		serialComm.sendPCDiscovery();
 
+		//Send frequent data
 		//if hub node
-		serialComm.sendFrequentData();
+		sendFrequentData();
 		//TODO if not hub node send to the hub
 		
 		timeLastSentFrequentData = timeNow;	
@@ -213,6 +211,29 @@ void loop()
 	//TODO RETIRAR
 	/*SPI.end ();
 	digitalWrite(LED_BUILTIN, nodeId == hubNode);*/
+}
+
+void sendFrequentData()
+{
+	//Only sends the frequent data packet if there is a hubnode
+	if(hubNode != 0)
+	{
+		float iluminance = 10.0f; //TODO replace with luminance
+		uint8_t pwm = 128;
+
+		SerialFrequentDataPacket frequentDataPacket(nodeId, iluminance, pwm);
+
+		if(hubNode == nodeId)
+		{
+			//Envia pelo serial ao PC
+			frequentDataPacket.sendOnSerial();
+		}
+		else
+		{
+			//Envia pelo can para o HUB
+			communication.sendFrequentDataToHub(frequentDataPacket);
+		}
+	}
 }
 
 bool checkIfNodeExists(uint8_t destination)

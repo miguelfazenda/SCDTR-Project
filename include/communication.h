@@ -14,6 +14,7 @@
 
 #define CAN_IS_HUB_NODE 10
 #define CAN_NO_LONGER_IS_HUB_NODE 11
+#define CAN_FREQUENT_DATA 11
 
 #define CAN_COMMANDS_REQUEST 8
 #define CAN_COMMANDS_RESPONSE 9
@@ -52,9 +53,11 @@ public:
     void sendBroadcastWakeup();
     void sendCalibLedOn();
     void sendCalibReady(float val);
-    void sendCalibGain(float val);
 
     void sendBroadcastIsHubNode();
+    void sendBroadcastNoLongerIsHubNode();
+
+    void sendFrequentDataToHub(SerialFrequentDataPacket frequentDataPacket);
 
     void sendCommandResponse(uint8_t sender, uint32_t value);
     void sendCommandRequest(uint8_t destination, Command& command);

@@ -2,13 +2,6 @@
 
 #include "glob.h"
 
-union Convertion
-{
-    uint32_t value32b;
-    uint8_t valueBytes[4];
-};
-
-
 /**
  * Creates a CAN frame ID that contains the message type, the destination and the sender
  */
@@ -104,10 +97,6 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     {
         calibrationFSM.otherNodeLedOn = true;
     }
-    else if (msgType == CAN_CALIB_GAIN)
-    {
-        //calibrationFSM.gainMatrix[nodeId][sender]=msg.value;
-    }
     else if (msgType == CAN_IS_HUB_NODE)
     {
         Serial.print("Received CAN_IS_HUB_NODE from ");
@@ -115,6 +104,13 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 
         //Changes the hubNode to be the one who sent the message
         hubNode = sender;
+    }
+    else if(msgType == CAN_FREQUENT_DATA)
+    {
+        //This is a hub node that received a frequent data packet from another node.
+        // Send it on the serial interface
+        SerialFrequentDataPacket frequentDataPacket(frame->data);
+        frequentDataPacket.sendOnSerial();
     }
     else if (msgType == CAN_NO_LONGER_IS_HUB_NODE)
     {
@@ -218,11 +214,22 @@ void Communication::sendCalibReady(float val)
     mcp2515->sendMessage(&sendingFrame);
 }
 
-void Communication::sendCalibGain(float val)
+/**
+ * Sends a Frequent Data Packet to the hub node
+ */
+void Communication::sendFrequentDataToHub(SerialFrequentDataPacket frequentDataPacket)
 {
-    Serial.println("[Comm] Sending Calib_Gain");
-    communication.writeFloat(canMessageId(0, CAN_CALIB_GAIN), val);
+    Serial.print("[Comm] Sending CAN_FREQUENT_DATA to hub id:");
+    Serial.println(hubNode);
+    //communication.writeFloat(canMessageId(0, CAN_CALIB_READY), val);
+    sendingFrame.can_id = canMessageId(hubNode, CAN_FREQUENT_DATA);
+
+    size_t numBytes = frequentDataPacket.toByteArray(sendingFrame.data);
+    sendingFrame.can_dlc = numBytes;
+
+    mcp2515->sendMessage(&sendingFrame);
 }
+
 
 /**
  * Send a message saying this node is now the HUB node
@@ -230,6 +237,13 @@ void Communication::sendCalibGain(float val)
 void Communication::sendBroadcastIsHubNode()
 {
     sendingFrame.can_id = canMessageId(0, CAN_IS_HUB_NODE);
+    sendingFrame.can_dlc = 0;
+    mcp2515->sendMessage(&sendingFrame);
+}
+
+void Communication::sendBroadcastNoLongerIsHubNode()
+{
+    sendingFrame.can_id = canMessageId(0, CAN_NO_LONGER_IS_HUB_NODE);
     sendingFrame.can_dlc = 0;
     mcp2515->sendMessage(&sendingFrame);
 }
