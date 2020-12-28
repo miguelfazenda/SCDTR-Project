@@ -10,9 +10,12 @@
 #define CAN_CALIB_READY 2
 #define CAN_CALIB_LED_ON 3
 #define CAN_CALIB_GAIN 4
+#define CAN_CONSENSUS 5
 
 #define CAN_HUB_GET_VALUE_RESPONSE 10
 #define CAN_HUB_GET_VALUE_REQUEST 11
+
+
 
 class Communication
 {
@@ -51,6 +54,7 @@ public:
 
     void sendResponseGetHubValue(uint8_t sender, uint8_t* data);
     void sendRequestHubGetValue(uint8_t destination, char valueType);
+    MCP2515::ERROR sendConsensusDutyCycle(float* val);
 };
 union my_can_msg {
     float value;

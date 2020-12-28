@@ -123,6 +123,13 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
         Serial.print(' ');
         Serial.print(frame->data[1]);
     }
+    else if (msgType == CAN_CONSENSUS)
+    {
+        Serial.print("Received consensus dutycycle value response from ");
+        Serial.println(sender);
+
+        
+    }
 }
 
 void Communication::sendResponseGetHubValue(uint8_t sender, uint8_t* data) {
@@ -246,6 +253,18 @@ void Communication::sendCalibGain(float val)
     Serial.println("[Comm] Sending Calib_Gain");
     communication.writeFloat(canMessageId(0, CAN_CALIB_GAIN), val);
 }
+
+MCP2515::ERROR Communication::sendConsensusDutyCycle(float* val)
+{
+    can_frame frame;
+    frame.can_id = canMessageId(0, CAN_CONSENSUS);
+    frame.can_dlc = 8;
+    for (int i = 0; i < 8; i++) //prepare can message
+        frame.data[i] =(uint8_t) val[i]*255/100; //converting each value of the array to a byte
+    //send data
+    return mcp2515->sendMessage(&frame);
+}
+
 
 /*void Communication::sendResponseLuminaireData(Luminaire *luminaire)
 {

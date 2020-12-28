@@ -15,7 +15,6 @@ private:
     Controller controller;
     unsigned long lastSampleTime = 0;
     unsigned long lpfSampleTime = 0;
-    int luxRef;
     const int LUX_OCCUPIED = 20;
     const int LUX_NON_OCCUPIED = 10;
     float ldrSlopeB = 0.0f;
@@ -29,6 +28,7 @@ private:
 public:
     //TODO ver se o professor prefere que crie um getter
     bool occupied = false;
+    int luxRef;
 
     void init(bool occupied);
     void loop();

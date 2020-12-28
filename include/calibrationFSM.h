@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#define MAX_NUM_NODES 5 //TODO tentar meter isto no glob.h (não funciona pq é um include ciclico glob.h <--> calibrationFSM.h)
+#define MAX_NUM_NODES 8 //TODO tentar meter isto no glob.h (não funciona pq é um include ciclico glob.h <--> calibrationFSM.h)
 
 enum CalibrationState { CalibInit, WaitReady, WaitLedOn, WaitTransient };
 

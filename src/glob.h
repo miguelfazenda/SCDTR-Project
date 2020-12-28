@@ -9,7 +9,7 @@
 
 #define CALIB_PRINTS
 
-#define MAX_NODE_ID 160
+#define MAX_NODE_ID 20
 
 #define EEPROM_ADDR_SLOPEM 0 //Address of where to get M of this arduino on the EEPROM
 #define EEPROM_ADDR_SLOPEB 4 //Address of where to get B can id of this arduino on the EEPROM
