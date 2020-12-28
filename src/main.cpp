@@ -25,6 +25,7 @@ MCP2515 mcp2515(10);
 void readSerial();
 void irqHandler();
 bool checkIfNodeExists(uint8_t destination);
+void sendFrequentData();
 
 volatile bool interrupt = false;
 volatile bool mcp2515_overflow = false;
@@ -193,7 +194,7 @@ void loop()
 	}
 
 	unsigned long timeNow = millis();
-	if(timeNow - timeLastSentFrequentData > 2*1000)
+	if(timeNow - timeLastSentFrequentData > 200)
 	{
 		serialComm.sendPCDiscovery();
 

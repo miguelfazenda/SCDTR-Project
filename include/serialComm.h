@@ -45,6 +45,8 @@ public:
         array[3] = illuminanceConvertion.valueBytes[2];
         array[4] = illuminanceConvertion.valueBytes[3];
         array[5] = pwm;
+
+        return 6;
     }
 
     void sendOnSerial()

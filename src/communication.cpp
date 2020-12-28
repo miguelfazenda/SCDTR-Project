@@ -34,16 +34,7 @@ void Communication::init(MCP2515 *mcp2515, can_frame_stream *cf_stream)
     mcp2515->setFilter(MCP2515::RXF2, true, 0);
     mcp2515->setFilter(MCP2515::RXF3, true, (canid_t)nodeId << 16);
 
-    //mcp2515->setNormalMode();
-    //TODO REMOVER SLEEP MODE!!!!!!
-    //TODO REMOVER SLEEP MODE!!!!!!
-    //TODO REMOVER SLEEP MODE!!!!!!
-    //TODO REMOVER SLEEP MODE!!!!!!
-    mcp2515->setSleepMode();
-    //TODO REMOVER SLEEP MODE!!!!!!
-    //TODO REMOVER SLEEP MODE!!!!!!
-    //TODO REMOVER SLEEP MODE!!!!!!
-    //TODO REMOVER SLEEP MODE!!!!!!
+    mcp2515->setNormalMode();
 }
 MCP2515::ERROR Communication::writeFloat(uint32_t id, uint32_t val)
 {
