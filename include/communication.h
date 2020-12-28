@@ -5,14 +5,19 @@
 #include <mcp2515.h>
 #include "luminaire.h"
 #include "can_frame_stream.h"
+#include "serialComm.h"
 
 #define CAN_WAKEUP_BROADCAST 1
 #define CAN_CALIB_READY 2
 #define CAN_CALIB_LED_ON 3
 #define CAN_CALIB_GAIN 4
 
-#define CAN_HUB_GET_VALUE_RESPONSE 10
-#define CAN_HUB_GET_VALUE_REQUEST 11
+#define CAN_IS_HUB_NODE 10
+#define CAN_NO_LONGER_IS_HUB_NODE 11
+
+#define CAN_COMMANDS_REQUEST 8
+#define CAN_COMMANDS_RESPONSE 9
+
 
 class Communication
 {
@@ -49,8 +54,10 @@ public:
     void sendCalibReady(float val);
     void sendCalibGain(float val);
 
-    void sendResponseGetHubValue(uint8_t sender, uint8_t* data);
-    void sendRequestHubGetValue(uint8_t destination, char valueType);
+    void sendBroadcastIsHubNode();
+
+    void sendCommandResponse(uint8_t sender, uint32_t value);
+    void sendCommandRequest(uint8_t destination, Command& command);
 };
 union my_can_msg {
     float value;

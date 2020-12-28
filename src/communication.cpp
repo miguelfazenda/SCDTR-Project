@@ -2,6 +2,13 @@
 
 #include "glob.h"
 
+union Convertion
+{
+    uint32_t value32b;
+    uint8_t valueBytes[4];
+};
+
+
 /**
  * Creates a CAN frame ID that contains the message type, the destination and the sender
  */
@@ -34,7 +41,16 @@ void Communication::init(MCP2515 *mcp2515, can_frame_stream *cf_stream)
     mcp2515->setFilter(MCP2515::RXF2, true, 0);
     mcp2515->setFilter(MCP2515::RXF3, true, (canid_t)nodeId << 16);
 
-    mcp2515->setNormalMode();    
+    //mcp2515->setNormalMode();
+    //TODO REMOVER SLEEP MODE!!!!!!
+    //TODO REMOVER SLEEP MODE!!!!!!
+    //TODO REMOVER SLEEP MODE!!!!!!
+    //TODO REMOVER SLEEP MODE!!!!!!
+    mcp2515->setSleepMode();
+    //TODO REMOVER SLEEP MODE!!!!!!
+    //TODO REMOVER SLEEP MODE!!!!!!
+    //TODO REMOVER SLEEP MODE!!!!!!
+    //TODO REMOVER SLEEP MODE!!!!!!
 }
 MCP2515::ERROR Communication::writeFloat(uint32_t id, uint32_t val)
 {
@@ -56,14 +72,6 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 
     uint8_t msgType = frame->can_id & 0x000000FF; //GETs first 8 bits that have the type
     uint8_t sender = (frame->can_id & 0x0000FF00) >> 8;
-    /*my_can_msg msg;
-    if (frame->can_dlc != 0)
-    {
-        for (size_t i = 0; i < 4; i++)
-        {
-            msg.bytes[i] = frame->data[i];
-        }
-    }*/
 
     if (msgType == CAN_WAKEUP_BROADCAST)
     {
@@ -100,114 +108,81 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     {
         //calibrationFSM.gainMatrix[nodeId][sender]=msg.value;
     }
-    else if(msgType == CAN_HUB_GET_VALUE_REQUEST)
+    else if (msgType == CAN_IS_HUB_NODE)
     {
-        Serial.print("Received get value request from ");
+        Serial.print("Received CAN_IS_HUB_NODE from ");
         Serial.print(sender);
-        Serial.print(" ");
-        Serial.println((char)frame->data[0]);
-        //If this is a message request sent by the hub, respond
-        sendResponseGetHubValue(sender, frame->data);
+
+        //Changes the hubNode to be the one who sent the message
+        hubNode = sender;
     }
-    else if (msgType == CAN_HUB_GET_VALUE_RESPONSE)
+    else if (msgType == CAN_NO_LONGER_IS_HUB_NODE)
+    {
+        Serial.print("Received CAN_NO_LONGER_IS_HUB_NODE from ");
+        Serial.print(sender);
+
+        //Changes the hubNode to be 0
+        if(hubNode == sender)
+            hubNode = 0;
+    }
+    else if(msgType == CAN_COMMANDS_REQUEST)
+    {
+        Serial.print("Received CAN_COMMANDS_REQUEST from ");
+        Serial.print(sender);
+
+        //Parses the command from the binary data on the can frame
+        Command command(frame->data);
+
+        //Executes the command and gets the return value 
+        uint32_t value = serialComm.executeCommand(command);
+
+        //If this is a message request sent by the hub, respond
+        sendCommandResponse(sender, value);
+    }
+    else if (msgType == CAN_COMMANDS_RESPONSE)
     {
         //If this is a message response sent to the hub, print it on the serial
-        Serial.print("Received get value response from ");
+        Serial.print("Received CAN_COMMANDS_RESPONSE from ");
         Serial.println(sender);
 
-        //TODO meter isto dentro do hub maybe?
-        //Print do do output deste comando
-        Serial.print((char)frame->data[0]);
-        Serial.print(' ');
-        Serial.print(sender);
-        Serial.print(' ');
-        Serial.print(frame->data[1]);
+        Convertion value;
+        value.valueBytes[0] = sendingFrame.data[0];
+        value.valueBytes[1] = sendingFrame.data[1];
+        value.valueBytes[2] = sendingFrame.data[2];
+        value.valueBytes[3] = sendingFrame.data[3];
+
+        //Sends the response on the serial port
+        serialComm.receivedCommandResponseFromCAN(sender, value.value32b);
     }
 }
 
-void Communication::sendResponseGetHubValue(uint8_t sender, uint8_t* data) {
-    sendingFrame.can_id = canMessageId(sender, CAN_HUB_GET_VALUE_RESPONSE);
+void Communication::sendCommandResponse(uint8_t sender, uint32_t value) {
+    Serial.print("[Comm] Sending CAN_COMMANDS_REQUEST to ");
+    Serial.println(sender);
+    sendingFrame.can_id = canMessageId(sender, CAN_COMMANDS_RESPONSE);
 
-    Serial.println(data[0]);
-    Serial.println((char)data[0]);
+    //Converts from 32bit value to 4 bytes
+    Convertion sendingValue;
+    sendingValue.value32b = value;
 
-    char valueType = data[0];
-
-
-    sendingFrame.can_dlc = 2;
-
-    sendingFrame.data[0] = valueType;
-    sendingFrame.data[1] = 0;
-
-    switch(valueType) {
-    case 'I':
-        //Responds with the the iluminance read by the LDR
-        sendingFrame.data[1] = 255;
-        break;
-    case 'd':
-        //Responds with the PWM of the luminaire
-        sendingFrame.data[1] = 255;
-        break;
-    case 'o':
-        //Responds with current occupancy of the Node
-        sendingFrame.data[1] = 255;
-        break;
-    case 'O':
-        //Responds with the Lower bound of Occupied state of the node
-        sendingFrame.data[1] = 255;
-        break;
-    case 'U':
-        //Responds with the Lower bound of Unccupied state of the node
-        sendingFrame.data[1] = 255;
-        break;
-    case 'L':
-        //Responds with the illuminance lower bound of the node
-        sendingFrame.data[1] = 255;
-        break;
-    case 'x':
-        //Responds with the external illuminance of the node
-        sendingFrame.data[1] = 255;
-        break;
-    case 'r':
-        //Responds with the illuminance controlreference
-        sendingFrame.data[1] = 255;
-        break;
-    case 'c':
-        //Responds with the current energy cost
-        sendingFrame.data[1] = 255;
-        break;
-    case 'p':
-        //Responds with the power conssuption of the node
-        sendingFrame.data[1] = 255;
-        break;
-
-    case 't':
-        //Responds with the time elapsed since last reset
-        sendingFrame.data[1] = micros();//-lastResetTime;
-        break;
-    case 'e':
-        //Responds with the accumulated energy in the node since last reset
-        sendingFrame.data[1] = 255;
-        break;
-    case 'v':
-        //Responds with the accumulated visibility error in the node since last reset
-        sendingFrame.data[1] = 255;
-        break;
-    case 'f':
-        //Responds with the accumulated flicker error in the nodesince last reset
-        sendingFrame.data[1] = 255;
-        break;
-    }
+    //Sends the returned value from the command execution
+    sendingFrame.data[0] = sendingValue.valueBytes[0];
+    sendingFrame.data[1] = sendingValue.valueBytes[1];
+    sendingFrame.data[2] = sendingValue.valueBytes[2];
+    sendingFrame.data[3] = sendingValue.valueBytes[3];
+    sendingFrame.can_dlc = 4;
     mcp2515->sendMessage(&sendingFrame);
 }
 
-void Communication::sendRequestHubGetValue(uint8_t destination, char valueType) {
-    Serial.print("[Comm] Sending CAN_HUB_GET_VALUE_REQUEST to ");
+void Communication::sendCommandRequest(uint8_t destination, Command& command) {
+    Serial.print("[Comm] Sending CAN_COMMANDS_REQUEST to ");
     Serial.println(destination);
-    sendingFrame.can_id = canMessageId(destination, CAN_HUB_GET_VALUE_REQUEST);
-    sendingFrame.can_dlc = 1;
-    sendingFrame.data[0] = valueType;
-    Serial.println(sendingFrame.data[0]);
+
+    sendingFrame.can_id = canMessageId(destination, CAN_COMMANDS_REQUEST);
+    
+    size_t numBytes = command.toByteArray((char*)sendingFrame.data);
+    sendingFrame.can_dlc = numBytes;
+
     mcp2515->sendMessage(&sendingFrame);
 }
 
@@ -225,6 +200,7 @@ void Communication::sendCalibLedOn()
     sendingFrame.can_dlc = 0;
     mcp2515->sendMessage(&sendingFrame);
 }
+
 void Communication::sendCalibReady(float val)
 {
     Serial.print("[Comm] Sending Calib_Ready with gain=");
@@ -241,29 +217,19 @@ void Communication::sendCalibReady(float val)
 
     mcp2515->sendMessage(&sendingFrame);
 }
+
 void Communication::sendCalibGain(float val)
 {
     Serial.println("[Comm] Sending Calib_Gain");
     communication.writeFloat(canMessageId(0, CAN_CALIB_GAIN), val);
 }
 
-/*void Communication::sendResponseLuminaireData(Luminaire *luminaire)
+/**
+ * Send a message saying this node is now the HUB node
+ */
+void Communication::sendBroadcastIsHubNode()
 {
-    canMsg.can_id = canId;
-    canMsg.can_dlc = 2;                               //num data bytes
-    canMsg.data[0] = CAN_RESPONSE_GET_LUMINAIRE_DATA; //Message id
-    canMsg.data[1] = luminaire->occupied;
-    canMsg.data[2] = lux;
-    canMsg.data[3] = pwm;
-
-mcp2515->sendMessage(&canMsg);
+    sendingFrame.can_id = canMessageId(0, CAN_IS_HUB_NODE);
+    sendingFrame.can_dlc = 0;
+    mcp2515->sendMessage(&sendingFrame);
 }
-
-void Communication::sendRequestLuminaireData(uint8_t destination)
-{
-    canMsg.can_id = canId;
-    canMsg.can_dlc = 2;                              //num data bytes
-    canMsg.data[0] = CAN_REQUEST_GET_LUMINAIRE_DATA; //Message id
-    canMsg.data[1] = destination;
-    mcp2515->sendMessage(&canMsg);
-}*/

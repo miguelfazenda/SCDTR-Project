@@ -11,6 +11,7 @@ uint8_t nodeId;
 uint8_t nodesList[MAX_NUM_NODES] = {0};
 uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1] = {0};
 uint8_t numTotalNodes;
+uint8_t hubNode = 0;
 
 Communication communication;
 Luminaire luminaire;
@@ -23,6 +24,7 @@ MCP2515 mcp2515(10);
 
 void readSerial();
 void irqHandler();
+bool checkIfNodeExists(uint8_t destination);
 
 volatile bool interrupt = false;
 volatile bool mcp2515_overflow = false;
@@ -40,6 +42,10 @@ void setup()
 {
 	// initialize serial communications at 1Mbps
 	Serial.begin(1000000);
+
+	// TODO Retirar
+	//pinMode(LED_BUILTIN, OUTPUT);
+	// TODO Retirar
 
 	// Change PWM frequency on PIN 9
 	TCCR1B = TCCR1B & (B11111000 | B00000001);
@@ -186,21 +192,39 @@ void loop()
 		}
 	}
 
-
-	if(timeLastSentFrequentData < millis()-2*1000)
+	unsigned long timeNow = millis();
+	if(timeNow - timeLastSentFrequentData > 2*1000)
 	{
+		//PC Discovery - sends message to see if pc responds
+		Serial.write(255);
+		Serial.write('D');
+		Serial.flush();
+
 		//if hub node
 		serialComm.sendFrequentData();
-		//if not hub node send to the hub
-		timeLastSentFrequentData = millis();
+		//TODO if not hub node send to the hub
+		
+		timeLastSentFrequentData = timeNow;	
 	}
 
 	mainFSM.loop();
 	//luminaire.loop();
+
+	//TODO RETIRAR
+	/*SPI.end ();
+	digitalWrite(LED_BUILTIN, nodeId == hubNode);*/
 }
 
-int checkGetArguments(String data, int* flagT);
-int checkSetArguments(String data, float *val);
-int checkOtherArguments(String data);
-bool checkIfNodeExists(uint8_t destination);
-bool checkAndPrintCommandError(uint8_t destination);
+bool checkIfNodeExists(uint8_t destination)
+{
+	bool destinationExists = false;
+	for (size_t i = 0; i < numTotalNodes; i++) //checks if destination exists
+	{
+		if (destination == nodesList[i])
+		{
+			destinationExists = true;
+			break;
+		}
+	}
+	return destinationExists;
+}
