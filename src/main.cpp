@@ -8,7 +8,7 @@
 
 uint8_t nodeId;
 uint8_t nodesList[MAX_NUM_NODES] = {0};
-uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1] = {0};
+uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID + 1] = {0};
 uint8_t numTotalNodes;
 
 Communication communication;
@@ -16,6 +16,7 @@ Luminaire luminaire;
 MainFSM mainFSM;
 LPF lpf;
 CalibrationFSM calibrationFSM;
+Consensus consensus;
 
 MCP2515 mcp2515(10);
 
@@ -42,7 +43,7 @@ void setup()
 	numTotalNodes = 0;
 
 	//Read from EEPROM the CAN id
-	nodeId = EEPROM.read(EEPROM_ADDR_NODEID);	
+	nodeId = EEPROM.read(EEPROM_ADDR_NODEID);
 	//Registers this node's id on the nodesList array
 	registerNewNode(nodeId);
 
@@ -191,9 +192,13 @@ void loop()
 
 	mainFSM.loop();
 	//luminaire.loop();
+	if (consensus.consensusState != 0)
+	{
+		consensus.consensus_main();
+	}
 }
 
-int checkGetArguments(String data, int* flagT);
+int checkGetArguments(String data, int *flagT);
 int checkSetArguments(String data, float *val);
 int checkOtherArguments(String data);
 bool checkIfNodeExists(uint8_t destination);
@@ -207,11 +212,11 @@ void readSerial()
 	String data;
 	int destination = 0;
 	float val = 0;
-	int flagT = 0;//flag that indicates if the get response should be for all the system(flagT=1) or not
+	int flagT = 0; //flag that indicates if the get response should be for all the system(flagT=1) or not
 
 	//On get commands this stores what type of value. I - iluminance, d - dutycycle
 	char valueType;
-	
+
 	while (Serial.available())
 	{
 		data = Serial.readString();
@@ -219,14 +224,15 @@ void readSerial()
 		{
 		case 'g': //command type get
 			destination = checkGetArguments(data, &flagT);
-			if(checkAndPrintCommandError(destination) && flagT != 1)
+			if (checkAndPrintCommandError(destination) && flagT != 1)
 				break;
-			
+
 			//start get process
 			valueType = data[2];
 			Serial.print("valueType = ");
 			Serial.println(valueType);
-			if(flagT != 1){ //last argument inst T (T is a flag that indicates the response should be for all the system)
+			if (flagT != 1)
+			{ //last argument inst T (T is a flag that indicates the response should be for all the system)
 				communication.sendRequestHubGetValue(destination, valueType);
 				break;
 			}
@@ -234,26 +240,26 @@ void readSerial()
 			break;
 		case 'o': //command type occupancy
 			destination = checkSetArguments(data, &val);
-			if(checkAndPrintCommandError(destination))
+			if (checkAndPrintCommandError(destination))
 				break;
 			//start occupancy process
 
 			break;
 		case 'O': //command type set Occupied reference
 			destination = checkSetArguments(data, &val);
-			if(checkAndPrintCommandError(destination))
+			if (checkAndPrintCommandError(destination))
 				break;
 			//start set illuminance occupied process
 			break;
 		case 'U': //command type set unnocupied refference
 			destination = checkSetArguments(data, &val);
-			if(checkAndPrintCommandError(destination))
+			if (checkAndPrintCommandError(destination))
 				break;
 			//start illuminance unoccupied  process
 			break;
 		case 'c': //command type energy cost
 			destination = checkSetArguments(data, &val);
-			if(checkAndPrintCommandError(destination))
+			if (checkAndPrintCommandError(destination))
 				break;
 			//start energy cost process
 
@@ -268,13 +274,13 @@ void readSerial()
 			break;
 		case 'b': //command type buffer
 			destination = checkOtherArguments(data);
-			if(checkAndPrintCommandError(destination))
+			if (checkAndPrintCommandError(destination))
 				break;
 			//starts buffer process
 			break; //command type stop/start
 		case 's':
 			destination = checkOtherArguments(data);
-			if(checkAndPrintCommandError(destination))
+			if (checkAndPrintCommandError(destination))
 				break;
 			//starts stop/start process
 			break;
@@ -296,7 +302,8 @@ void readSerial()
  * Returns true if there is an error
  * 	There is an error when destination == -1 our the destination doesnt't exist
  */
-bool checkAndPrintCommandError(uint8_t destination) {
+bool checkAndPrintCommandError(uint8_t destination)
+{
 	if (destination == -1)
 	{
 		Serial.println("No command recognized!");
@@ -324,11 +331,11 @@ bool checkIfNodeExists(uint8_t destination)
 	return destinationExists;
 }
 
-int checkGetArguments(String data, int* flagT)
+int checkGetArguments(String data, int *flagT)
 {
 	String arguments = "IdoOULxRcptevf"; //string that has every char thats corresponds to
 										 //one argument of comands type get
-	String argumentsWithT = "pevf";		//string that has every char thats corresponds to
+	String argumentsWithT = "pevf";		 //string that has every char thats corresponds to
 										 //one argument of comands type get that allows the last argument to be 'T'
 	uint8_t destination = 0;
 	bool validCommand = false;
@@ -343,17 +350,17 @@ int checkGetArguments(String data, int* flagT)
 			validCommand = true;
 			break;
 		}
-	} 
+	}
 	for (size_t i = 0; i < argumentsWithT.length(); i++)
 	{
-		if(data[2] == argumentsWithT[i] && data[4] == 'T' && data.length() == 5){
-			*flagT=1;//Value that corresponts to the command beeing valid and the last argument is 'T'
+		if (data[2] == argumentsWithT[i] && data[4] == 'T' && data.length() == 5)
+		{
+			*flagT = 1; //Value that corresponts to the command beeing valid and the last argument is 'T'
 			return 0;
 		}
 	}
-	
 
-	if(!validCommand)
+	if (!validCommand)
 		return -1; //this value represents that the command doesnt exist
 
 	destination = (data.substring(3, data.length() - 1)).toInt();

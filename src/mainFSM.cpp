@@ -67,9 +67,24 @@ void MainFSM::loop() {
         calibrationFSM.loop();
         if(calibrationFSM.done) {
             setState(State::Run);
+            consensus.consensusState = 1;
 
+            calibrationFSM.residualArray[0] = 50;
+            calibrationFSM.residualArray[1] = 30;
+            calibrationFSM.residualArray[2] = 30;
 
+            calibrationFSM.gainMatrix[0][0] = 1.5;
+            calibrationFSM.gainMatrix[0][1] = 0.9;
+            calibrationFSM.gainMatrix[0][2] = 0.9;
+            calibrationFSM.gainMatrix[1][0] = 0.8;
+            calibrationFSM.gainMatrix[1][1] = 2.1;
+            calibrationFSM.gainMatrix[1][2] = 0.8;
+            calibrationFSM.gainMatrix[2][0] = 0.8;
+            calibrationFSM.gainMatrix[2][1] = 0.8;
+            calibrationFSM.gainMatrix[2][2] = 2;
 
+            luminaire.luxRef = 100;
+            consensus.init();
             //Print gain matrix
             calibrationFSM.printResidualAndGainMatrix();
         }

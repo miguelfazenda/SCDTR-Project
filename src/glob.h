@@ -6,6 +6,7 @@
 #include "mainFSM.h"
 #include "calibrationFSM.h"
 #include "lpf.h"
+#include "consensus.h"
 
 #define CALIB_PRINTS
 
@@ -14,6 +15,7 @@
 #define EEPROM_ADDR_SLOPEM 0 //Address of where to get M of this arduino on the EEPROM
 #define EEPROM_ADDR_SLOPEB 4 //Address of where to get B can id of this arduino on the EEPROM
 #define EEPROM_ADDR_NODEID 8 //Address of where to get the can id of this arduino on the EEPROM
+#define EEPROM_ADDR_COST 9 //(até 13)Address of where to get the luminair cost of this arduino on the EEPROM
 
 //The CAN id of this arduino (uint8_t is one byte)
 extern uint8_t nodeId;
@@ -29,7 +31,7 @@ extern Luminaire luminaire;
 extern MainFSM mainFSM;
 extern LPF lpf;
 extern CalibrationFSM calibrationFSM;
-
+extern Consensus consensus;
 
 
 void registerNewNode(uint8_t id);
