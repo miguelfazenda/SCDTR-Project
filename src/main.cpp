@@ -194,7 +194,7 @@ void loop()
 	}
 
 	unsigned long timeNow = millis();
-	if(timeNow - timeLastSentFrequentData > 200)
+	if(timeNow - timeLastSentFrequentData > 2000)
 	{
 		serialComm.sendPCDiscovery();
 

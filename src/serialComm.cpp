@@ -27,18 +27,18 @@ void SerialComm::readSerial()
 
 			/*Serial.print("[DEBUG] command destination = ");
 			Serial.println(command.destination);*/
-
 			if(command.cmd == 'D')
 			{
+				//Received response from 'PC Discovery', which means it is now a hub node
+
 				//Store current time, so we know when it stopped receiving the response in some time
 				pcDiscoveryHadResponse = true;
-
-				//Received response from 'PC Discovery', which means it is now a hub node
 				if(hubNode != nodeId)
 				{
 					Serial.print("[Debug] This node is now HUB");
 					hubNode = nodeId;
 					communication.sendBroadcastIsHubNode();
+					serialComm.sendListNodesToPC();
 				}
 			}
 			else if(command.destination == 0)
@@ -205,5 +205,20 @@ void SerialComm::sendPCDiscovery()
 
 	Serial.write(255);
 	Serial.write('D');
+	Serial.flush();
+}
+
+/**
+ * Sends a message with the list of nodes to the PC
+ */
+void SerialComm::sendListNodesToPC()
+{
+	Serial.write(255);
+	Serial.write('L');
+	//Indicates the number of nodes
+	Serial.write(numTotalNodes);
+	for(uint8_t i = 0; i<numTotalNodes; i++)
+		Serial.write(nodesList[i]);
+
 	Serial.flush();
 }

@@ -95,6 +95,7 @@ public:
 
     void sendTotalIfAllValueForTotalReceived();
     void sendPCDiscovery();
+    void sendListNodesToPC();
 };
 
 #endif
