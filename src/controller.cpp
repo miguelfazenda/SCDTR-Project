@@ -1,5 +1,6 @@
 #include "controller.h"
 #include <Arduino.h> //Só serve para os prints
+#include "glob.h"
 
 #define KP 10//15
 #define KI 800
@@ -10,13 +11,13 @@ Controller::Controller()
 	u=0;
 }
 
-int Controller::calc(float errorVoltage, unsigned long samplingTime, int luxRef, float systemGain) {
+int Controller::calc(float errorVoltage, unsigned long samplingTime, float luxRef, float systemGain, float residualRead) {
 	int uff; // Feedforward control signal (PWM)
 	float up; // Feedback control signal (PWM)
 	
 
 	//Feedforward
-	uff = luxRef/systemGain;
+	uff = luxRef/systemGain - residualRead;
 	
 	//PI control
 	ui = ui + samplingTime*(KI/1000000.0f)*errorVoltage; // samplingTime/1000000.0f to convert it to seconds

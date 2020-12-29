@@ -27,10 +27,8 @@ private:
 public:
     //TODO ver se o professor prefere que crie um getter
     bool occupied = false;
-    float luxRef;
-    float luxRefAfterConsensus;
-    float LUX_OCCUPIED = 20.0;
-    float LUX_NON_OCCUPIED = 10.0;
+    int luxRef;
+    int luxRefAfterConsensus;
     float cost;
 
     void init(bool occupied);
@@ -39,10 +37,6 @@ public:
     void setLuxRef(int lux);
     void setOccupied(bool o);
 
-    /**
-     * FEEDFORWARD CONTROLLER
-     * Returns the necessary PWM value to acheive a certain LUX
-     */
     float luxToVoltage(int lux);
     float voltageToLux(float voltage);
 

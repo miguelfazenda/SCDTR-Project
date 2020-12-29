@@ -30,6 +30,7 @@ public:
     void init();
     void consensus_main();
     void receivedMsg(float*);
+    void resetConsensus();
 };
 
 #endif

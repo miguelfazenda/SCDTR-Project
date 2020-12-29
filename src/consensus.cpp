@@ -248,7 +248,7 @@ void Consensus::consensus_main()
             Serial.println(dutyCycleBest[0]);
             Serial.println(dutyCycleBest[1]);
             Serial.println(dutyCycleBest[2]);
-
+            
             luminaire.luxRefAfterConsensus = (dutyCycleBest[nodeIdx]*250.0/100.0)*ki[nodeIdx] - calibrationFSM.residualArray[nodeIdx];
         }
     }
@@ -274,7 +274,7 @@ float Consensus::multiplyTwoArrays(float *array1, float *array2, uint8_t dimenti
 }
 
 
-void resetConsensus()
+void Consensus::resetConsensus()
 {
     dutyCycleAv[MAX_NUM_NODES] = {0.0};
     lagrangeMultipliers[MAX_NUM_NODES] = {0.0};
