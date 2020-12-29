@@ -78,8 +78,6 @@ void Consensus::consensus_iterate()
     if (check_feasibility(dutyCycleTest))
     {
         cost_unconstrained = evaluate_cost(dutyCycleTest);
-        Serial.print(F("unconstrained -> "));
-        Serial.println(cost_unconstrained);
         if (cost_unconstrained < costBest)
         {
             Serial.print(F("Foi escolhido unconstrained -> "));
@@ -107,8 +105,6 @@ void Consensus::consensus_iterate()
     if (check_feasibility(dutyCycleTest))
     {
         costBoundaryLinear = evaluate_cost(dutyCycleTest);
-        Serial.print(F("Linear -> "));
-        Serial.println(costBoundaryLinear);
         if (costBoundaryLinear < costBest)
         {
             Serial.print(F("Foi escolhido linear -> "));
@@ -131,8 +127,6 @@ void Consensus::consensus_iterate()
     if (check_feasibility(dutyCycleTest))
     {
         costBoundary0 = evaluate_cost(dutyCycleTest);
-        Serial.print(F("Boundary0 -> "));
-        Serial.println(costBoundary0);
         if (costBoundary0 < costBest)
         {
             Serial.print(F("Foi escolhido 0 -> "));
@@ -155,8 +149,6 @@ void Consensus::consensus_iterate()
     if (check_feasibility(dutyCycleTest))
     {
         float costBoundary100 = evaluate_cost(dutyCycleTest);
-        Serial.print(F("B100 -> "));
-        Serial.println(costBoundary100);
         if (costBoundary100 < costBest)
         {
             Serial.print(F("Foi escolhido 100 -> "));
@@ -179,8 +171,6 @@ void Consensus::consensus_iterate()
     if (check_feasibility(dutyCycleTest))
     {
         costBoundaryL0 = evaluate_cost(dutyCycleTest);
-        Serial.print(F("L0 -> "));
-        Serial.println(costBoundaryL0);
         if (costBoundaryL0 < costBest)
         {
             Serial.print(F("Foi escolhido L0 -> "));
@@ -203,8 +193,6 @@ void Consensus::consensus_iterate()
     if (check_feasibility(dutyCycleTest))
     {
         costBoundaryL100 = evaluate_cost(dutyCycleTest);
-        Serial.print(F("L100 -> "));
-        Serial.println(costBoundaryL100);
         if (costBoundaryL100 < costBest)
         {
             Serial.print(F("Foi escolhido L100 -> "));
