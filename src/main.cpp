@@ -4,23 +4,28 @@
 #include "communication.h"
 #include "luminaire.h"
 #include "can_frame_stream.h"
+#include "serialComm.h"
 #include "glob.h"
 
 uint8_t nodeId;
 uint8_t nodesList[MAX_NUM_NODES] = {0};
 uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1] = {0};
 uint8_t numTotalNodes;
+uint8_t hubNode = 0;
 
 Communication communication;
 Luminaire luminaire;
 MainFSM mainFSM;
 LPF lpf;
 CalibrationFSM calibrationFSM;
+SerialComm serialComm;
 
 MCP2515 mcp2515(10);
 
 void readSerial();
 void irqHandler();
+bool checkIfNodeExists(uint8_t destination);
+void sendFrequentData();
 
 volatile bool interrupt = false;
 volatile bool mcp2515_overflow = false;
@@ -31,10 +36,17 @@ volatile bool arduino_overflow = false;
 bool used_RX0 = false;
 bool used_RX1 = false;
 
+//frequent data is the iluminance and duty cycle that should be periodicaly sent
+unsigned long timeLastSentFrequentData = 0;
+
 void setup()
 {
 	// initialize serial communications at 1Mbps
 	Serial.begin(1000000);
+
+	// TODO Retirar
+	// pinMode(LED_BUILTIN, OUTPUT);
+	// TODO Retirar
 
 	// Change PWM frequency on PIN 9
 	TCCR1B = TCCR1B & (B11111000 | B00000001);
@@ -146,17 +158,9 @@ void irqHandler()
 
 void loop()
 {
-	/*if(state == STATE_INIT) {
-		if(micros() > 2000000) {
-			//After 2 seconds, sends a message through the CAN bus for the other nodes to register it's presence
-			communication.sendBroadcastWakeup();
-			state = STATE_ALGO;
-		}
-	}*/
-
 	/*if (hubNode)
 	{*/
-	readSerial();
+	serialComm.readSerial();
 	//}
 	if (interrupt)
 	{
@@ -189,125 +193,48 @@ void loop()
 		}
 	}
 
+	unsigned long timeNow = millis();
+	if(timeNow - timeLastSentFrequentData > 2000)
+	{
+		serialComm.sendPCDiscovery();
+
+		//Send frequent data
+		//if hub node
+		sendFrequentData();
+		//TODO if not hub node send to the hub
+		
+		timeLastSentFrequentData = timeNow;	
+	}
+
 	mainFSM.loop();
 	//luminaire.loop();
+
+	//TODO RETIRAR
+	/*SPI.end ();
+	digitalWrite(LED_BUILTIN, nodeId == hubNode);*/
 }
 
-int checkGetArguments(String data, int* flagT);
-int checkSetArguments(String data, float *val);
-int checkOtherArguments(String data);
-bool checkIfNodeExists(uint8_t destination);
-bool checkAndPrintCommandError(uint8_t destination);
-
-/**
- * Reads if there was an input on the serial port, if so, change the lux reference
- */
-void readSerial()
+void sendFrequentData()
 {
-	String data;
-	int destination = 0;
-	float val = 0;
-	int flagT = 0;//flag that indicates if the get response should be for all the system(flagT=1) or not
-
-	//On get commands this stores what type of value. I - iluminance, d - dutycycle
-	char valueType;
-	
-	while (Serial.available())
+	//Only sends the frequent data packet if there is a hubnode
+	if(hubNode != 0)
 	{
-		data = Serial.readString();
-		switch (data[0])
+		float iluminance = 10.0f; //TODO replace with luminance
+		uint8_t pwm = 128;
+
+		SerialFrequentDataPacket frequentDataPacket(nodeId, iluminance, pwm);
+
+		if(hubNode == nodeId)
 		{
-		case 'g': //command type get
-			destination = checkGetArguments(data, &flagT);
-			if(checkAndPrintCommandError(destination) && flagT != 1)
-				break;
-			
-			//start get process
-			valueType = data[2];
-			Serial.print("valueType = ");
-			Serial.println(valueType);
-			if(flagT != 1){ //last argument inst T (T is a flag that indicates the response should be for all the system)
-				communication.sendRequestHubGetValue(destination, valueType);
-				break;
-			}
-			//falta meter aqui função para quando ultimo argumento é 'T'
-			break;
-		case 'o': //command type occupancy
-			destination = checkSetArguments(data, &val);
-			if(checkAndPrintCommandError(destination))
-				break;
-			//start occupancy process
-
-			break;
-		case 'O': //command type set Occupied reference
-			destination = checkSetArguments(data, &val);
-			if(checkAndPrintCommandError(destination))
-				break;
-			//start set illuminance occupied process
-			break;
-		case 'U': //command type set unnocupied refference
-			destination = checkSetArguments(data, &val);
-			if(checkAndPrintCommandError(destination))
-				break;
-			//start illuminance unoccupied  process
-			break;
-		case 'c': //command type energy cost
-			destination = checkSetArguments(data, &val);
-			if(checkAndPrintCommandError(destination))
-				break;
-			//start energy cost process
-
-			break;
-		case 'r': //command type reset
-			if (data.length() != 1)
-			{
-				Serial.println("No command recognized!");
-				return;
-			}
-			//start reset process
-			break;
-		case 'b': //command type buffer
-			destination = checkOtherArguments(data);
-			if(checkAndPrintCommandError(destination))
-				break;
-			//starts buffer process
-			break; //command type stop/start
-		case 's':
-			destination = checkOtherArguments(data);
-			if(checkAndPrintCommandError(destination))
-				break;
-			//starts stop/start process
-			break;
-		case 'D':
-			Serial.println("------FLAGS-------");
-			Serial.println(used_RX0);
-			Serial.println(used_RX1);
-			break;
-
-		default: //no messagem type recognized
-			Serial.println("No command recognized!");
-			return;
-			break;
+			//Envia pelo serial ao PC
+			frequentDataPacket.sendOnSerial();
+		}
+		else
+		{
+			//Envia pelo can para o HUB
+			communication.sendFrequentDataToHub(frequentDataPacket);
 		}
 	}
-}
-
-/**
- * Returns true if there is an error
- * 	There is an error when destination == -1 our the destination doesnt't exist
- */
-bool checkAndPrintCommandError(uint8_t destination) {
-	if (destination == -1)
-	{
-		Serial.println("No command recognized!");
-		return true;
-	}
-	if (!checkIfNodeExists(destination))
-	{
-		Serial.println("Destination doesn't exist");
-		return true;
-	}
-	return false;
 }
 
 bool checkIfNodeExists(uint8_t destination)
@@ -322,86 +249,4 @@ bool checkIfNodeExists(uint8_t destination)
 		}
 	}
 	return destinationExists;
-}
-
-int checkGetArguments(String data, int* flagT)
-{
-	String arguments = "IdoOULxRcptevf"; //string that has every char thats corresponds to
-										 //one argument of comands type get
-	String argumentsWithT = "pevf";		//string that has every char thats corresponds to
-										 //one argument of comands type get that allows the last argument to be 'T'
-	uint8_t destination = 0;
-	bool validCommand = false;
-	if (data[1] != ' ' || data[3] != ' ')
-	{
-		return -1;
-	}
-	for (size_t i = 0; i < arguments.length(); i++)
-	{
-		if (data[2] == arguments[i])
-		{
-			validCommand = true;
-			break;
-		}
-	} 
-	for (size_t i = 0; i < argumentsWithT.length(); i++)
-	{
-		if(data[2] == argumentsWithT[i] && data[4] == 'T' && data.length() == 5){
-			*flagT=1;//Value that corresponts to the command beeing valid and the last argument is 'T'
-			return 0;
-		}
-	}
-	
-
-	if(!validCommand)
-		return -1; //this value represents that the command doesnt exist
-
-	destination = (data.substring(3, data.length() - 1)).toInt();
-	if (destination == 0)
-	{
-		return -1;
-	}
-	return destination;
-}
-
-int checkSetArguments(String data, float *val)
-{
-	int idx_aux = 0;
-	uint8_t destination = 0;
-	if (data[1] != ' ')
-	{
-		return -1;
-	}
-	idx_aux = data.indexOf(' ', 2);
-	if (idx_aux == -1)
-	{
-		return -1;
-	}
-	destination = (data.substring(2, idx_aux - 1)).toInt();
-	*val = (data.substring(idx_aux + 1, data.length() - 1)).toFloat();
-
-	if (destination == 0 || *val == 0)
-	{
-		return -1;
-	}
-	return destination;
-}
-
-int checkOtherArguments(String data)
-{
-	uint8_t destination = 0;
-	if (data[1] != ' ' || data[3] != ' ')
-	{
-		return -1;
-	}
-	else if (data[2] != 'I' || data[2] != 'd')
-	{
-		return -1;
-	}
-	destination = (data.substring(3, data.length() - 1)).toInt();
-	if (destination == 0)
-	{
-		return -1;
-	}
-	return destination;
 }

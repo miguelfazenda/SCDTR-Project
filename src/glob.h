@@ -6,6 +6,7 @@
 #include "mainFSM.h"
 #include "calibrationFSM.h"
 #include "lpf.h"
+#include "serialComm.h"
 
 #define CALIB_PRINTS
 
@@ -21,6 +22,8 @@ extern uint8_t nodesList[MAX_NUM_NODES];
 //This vector translates the nodeId to the index it is stored on the nodesList, gainMatrix and residualArray (nodeIndexOnGainMatrix[nodeId] = index)
 extern uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1];
 extern uint8_t numTotalNodes;
+//Which node is the hub node (0 for none)
+extern uint8_t hubNode;
 
 //extern unsigned int lastResetTime; //time since last restart
 
@@ -29,8 +32,9 @@ extern Luminaire luminaire;
 extern MainFSM mainFSM;
 extern LPF lpf;
 extern CalibrationFSM calibrationFSM;
-
+extern SerialComm serialComm;
 
 
 void registerNewNode(uint8_t id);
+bool checkIfNodeExists(uint8_t destination);
 #endif
