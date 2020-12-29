@@ -1,5 +1,4 @@
 #include "communication.h"
-
 #include "glob.h"
 
 /**
@@ -51,7 +50,7 @@ MCP2515::ERROR Communication::writeFloat(uint32_t id, uint32_t val)
 
 void Communication::received(Luminaire *luminaire, can_frame *frame)
 {
-    Serial.print("[Comm] Received can frame id=0x");
+    Serial.print(F("[Comm] Received can frame id=0x"));
     Serial.println(frame->can_id, HEX);
 
     uint8_t msgType = frame->can_id & 0x000000FF; //GETs first 8 bits that have the type
@@ -59,7 +58,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 
     if (msgType == CAN_WAKEUP_BROADCAST)
     {
-        Serial.print("Received CAN_WAKEUP_BROADCAST from node ");
+        Serial.print(F("Received CAN_WAKEUP_BROADCAST from node "));
         Serial.println(sender);
 
         //Register the sender node ID
@@ -72,16 +71,16 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
         {
             //The ready message contains the gain calculated (if it is not time to send gain, it send a negative number)
             Serial.print(sender);
-            Serial.print(" sent gain ");
+            Serial.print(F(" sent gain "));
             Serial.println(gainValue);
 
             calibrationFSM.receivedGainOrResidual(sender, gainValue);
         }
 
         //Sets that another node is ready
-        Serial.print("Node ");
+        Serial.print(F("Node "));
         Serial.print(sender);
-        Serial.println("is ready!");
+        Serial.println(F("is ready!"));
         calibrationFSM.incrementNodesReady();
     }
     else if (msgType == CAN_CALIB_LED_ON)
@@ -143,9 +142,22 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     }
     else if (msgType == CAN_CONSENSUS)
     {
-        Serial.print("Received consensus dutycycle value response from ");
+        //In each bit is stored the sign of the value in the frame data i
+        // 0 if positive or zero; 1 if negative
+        uint8_t signByte = frame->data[7];
+        int8_t sign = 0;
+    
+        Serial.print(F("Received consensus dutycycle value response from "));
         Serial.println(sender);
 
+        float dutyCyclesReceived[MAX_NUM_NODES] = {0.0};
+        for (uint8_t i = 0; i < numTotalNodes; i++)
+        {
+            dutyCyclesReceived[i] = float(frame->data[i])*100.0/255.0;
+            sign = ((signByte & (1<<i)) == 0) ? 1 : -1;
+            dutyCyclesReceived[i] = dutyCyclesReceived[i] * sign;
+        }
+        consensus.receivedMsg(dutyCyclesReceived);
         
     }
 }
@@ -189,7 +201,7 @@ void Communication::sendBroadcastWakeup()
 }
 void Communication::sendCalibLedOn()
 {
-    Serial.println("[Comm] Sending Calib_Led_on");
+    Serial.println(F("[Comm] Sending Calib_Led_on"));
     sendingFrame.can_id = canMessageId(0, CAN_CALIB_LED_ON);
     sendingFrame.can_dlc = 0;
     mcp2515->sendMessage(&sendingFrame);
@@ -197,7 +209,7 @@ void Communication::sendCalibLedOn()
 
 void Communication::sendCalibReady(float val)
 {
-    Serial.print("[Comm] Sending Calib_Ready with gain=");
+    Serial.print(F("[Comm] Sending Calib_Ready with gain="));
     Serial.println(val);
     //communication.writeFloat(canMessageId(0, CAN_CALIB_READY), val);
     sendingFrame.can_id = canMessageId(0, CAN_CALIB_READY);
@@ -230,11 +242,21 @@ void Communication::sendFrequentDataToHub(SerialFrequentDataPacket frequentDataP
 
 MCP2515::ERROR Communication::sendConsensusDutyCycle(float* val)
 {
+    //In each bit is stored the sign of the value in the frame data i
+    // 0 if positive or zero; 1 if negative
+    uint8_t signByte = 0;
+
     can_frame frame;
     frame.can_id = canMessageId(0, CAN_CONSENSUS);
     frame.can_dlc = 8;
-    for (int i = 0; i < 8; i++) //prepare can message
-        frame.data[i] =(uint8_t) val[i]*255/100; //converting each value of the array to a byte
+    float aux = 0.0;
+    for (int i = 0; i < numTotalNodes; i++) //prepare can message
+    { 
+        aux = round(val[i]*255.0/100.0);
+        frame.data[i] = (uint8_t) abs(aux); //converting each value of the array to a byte
+        signByte = signByte | (val[i] < 0) << i;
+    }
+    frame.data[7] = signByte;
     //send data
     return mcp2515->sendMessage(&frame);
 }

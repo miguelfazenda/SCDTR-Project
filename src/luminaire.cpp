@@ -22,6 +22,7 @@ void Luminaire::init(bool occupied) {
 	//Luminair physical variables, saved on the EEPROM
 	EEPROM.get(EEPROM_ADDR_SLOPEM, ldrSlopeM);
 	EEPROM.get(EEPROM_ADDR_SLOPEB, ldrSlopeB);
+	EEPROM.get(EEPROM_ADDR_COST, cost);
 
 	// Serial.print("--------[Physical Param]--------");
 	// Serial.println(ldrSlopeM);
@@ -33,7 +34,7 @@ void Luminaire::init(bool occupied) {
 	//initialCalibration();
 
 	// Changes the desired LUX value
-	//setOccupied(occupied);
+	setOccupied(occupied);
 
 	//So that the lpf has at least one sample to start with
 	//lpf.sample();
@@ -139,9 +140,9 @@ void Luminaire::initialCalibration()
 	int lux2 = voltageToLux(getVoltage());
 	systemGain = (float)(lux1-lux2) / (pwm1-pwm2);
 
-	Serial.print("Calibration successful!\t Gain=");
+	Serial.print(F("Calibration successful!\t Gain="));
 	Serial.println(systemGain, 8);
-	Serial.print(" from PWM=");
+	Serial.print(F(" from PWM="));
 	Serial.print(pwm1);
 	Serial.print(" lux=");
 	Serial.print(lux1);
@@ -169,11 +170,13 @@ void Luminaire::setOccupied(bool o) {
 	int lux = occupied ? LUX_OCCUPIED : LUX_NON_OCCUPIED;
 	setLuxRef(lux);
 
-	Serial.print("OCCUPIED\tReference:\tLux=");
+	Serial.print(F("OCCUPIED\tReference:\tLux="));
 	Serial.print(lux);
 	Serial.print("\tV=");
 	Serial.println(luxToVoltage(lux));
 }
+
+
 
 
 float Luminaire::luxToVoltage(int lux) {

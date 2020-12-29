@@ -150,7 +150,7 @@ void CalibrationFSM::runStateWaitTrasient(unsigned long timeSinceLastTransition)
         //Measure
         luxReads[luxReadNum] = luminaire.voltageToLux(luminaire.getVoltage());
 #ifdef CALIB_PRINTS
-        Serial.print("luxReads[");
+        Serial.print(F("luxReads["));
         Serial.print(luxReadNum);
         Serial.print("] = ");
         Serial.println(luxReads[luxReadNum]);
@@ -210,7 +210,7 @@ void CalibrationFSM::incrementNodesReady()
 {
     numNodesReady++;
 #ifdef CALIB_PRINTS
-    Serial.print("numNodesReady = ");
+    Serial.print(F("numNodesReady = "));
     Serial.println(numNodesReady);
 #endif
 }
@@ -240,7 +240,7 @@ void CalibrationFSM::receivedGainOrResidual(uint8_t sender, float value)
 void CalibrationFSM::setGain(uint8_t i, uint8_t j, float gain)
 {
 #ifdef CALIB_PRINTS
-    Serial.print("gainMatrix[");
+    Serial.print(F("gainMatrix["));
     Serial.print(i);
     Serial.print(", ");
     Serial.print(j);

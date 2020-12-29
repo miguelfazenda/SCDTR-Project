@@ -9,7 +9,7 @@
 
 uint8_t nodeId;
 uint8_t nodesList[MAX_NUM_NODES] = {0};
-uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1] = {0};
+uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID + 1] = {0};
 uint8_t numTotalNodes;
 uint8_t hubNode = 0;
 
@@ -19,6 +19,7 @@ MainFSM mainFSM;
 LPF lpf;
 CalibrationFSM calibrationFSM;
 SerialComm serialComm;
+Consensus consensus;
 
 MCP2515 mcp2515(10);
 
@@ -54,7 +55,7 @@ void setup()
 	numTotalNodes = 0;
 
 	//Read from EEPROM the CAN id
-	nodeId = EEPROM.read(EEPROM_ADDR_NODEID);	
+	nodeId = EEPROM.read(EEPROM_ADDR_NODEID);
 	//Registers this node's id on the nodesList array
 	registerNewNode(nodeId);
 
@@ -208,11 +209,17 @@ void loop()
 
 	mainFSM.loop();
 	//luminaire.loop();
-
-	//TODO RETIRAR
-	/*SPI.end ();
-	digitalWrite(LED_BUILTIN, nodeId == hubNode);*/
+	if (consensus.consensusState != 0)
+	{
+		consensus.consensus_main();
+	}
 }
+
+int checkGetArguments(String data, int *flagT);
+int checkSetArguments(String data, float *val);
+int checkOtherArguments(String data);
+bool checkIfNodeExists(uint8_t destination);
+bool checkAndPrintCommandError(uint8_t destination);
 
 void sendFrequentData()
 {
