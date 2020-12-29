@@ -36,13 +36,7 @@ float Consensus::evaluate_cost(float *dutyClicleToCheck)
 bool Consensus::check_feasibility(float *dutyClicleToCheck)
 {
     float tol = 0.01;
-    //Serial.println(F("--dutyClicleToCheck--"));
-    for (uint8_t i = 0; i < numTotalNodes; i++)
-    {
-        //Serial.println(dutyClicleToCheck[i]);
-    }
-    //Serial.println(F("--END dutyClicleToCheck--"));
-   // Serial.println(LiRef - calibrationFSM.residualArray[nodeIdx] - tol);
+
     if (dutyClicleToCheck[nodeIdx] < 0 - tol)
         return false;
     if (dutyClicleToCheck[nodeIdx] > 100 + tol)
@@ -88,18 +82,11 @@ void Consensus::consensus_iterate()
     }
 
     //---------------- Compute minimum constrained to linear boundary ----------------
-    //float dutyCycleBestLinear[MAX_NUM_NODES] = {0};
-    //Serial.println(F("--OLHA PARA AQUI --"));
     for (uint8_t i = 0; i < numTotalNodes; i++)
     {
         dutyCycleTest[i] = 1 / rho * z[i] - ki[i] / kiNorm * (calibrationFSM.residualArray[nodeIdx] - LiRef + 1 / rho * multiplyTwoArrays(z, ki, numTotalNodes));
-        // Serial.println(ki[i]);
-        // Serial.println(1 / rho * z[i]);
-        // Serial.println(calibrationFSM.residualArray[i] - LiRef + 1 / rho * multiplyTwoArrays(z, ki, numTotalNodes));
-        // Serial.println(multiplyTwoArrays(z, ki, numTotalNodes));
-        // Serial.println(ki[i] / kiNorm * (calibrationFSM.residualArray[i] - LiRef + 1 / rho * multiplyTwoArrays(z, ki, numTotalNodes)));
     }
-    //Serial.println(F("--FIM --"));
+
     //check feasibility of minimum constrained to linear boundary
     float costBoundaryLinear = 0.0;
     if (check_feasibility(dutyCycleTest))
@@ -115,7 +102,6 @@ void Consensus::consensus_iterate()
     }
 
     //---------------- Compute minimum constrained to 0 boundary ----------------
-    //float dutyCycleBest0[MAX_NUM_NODES] = {0};
     for (uint8_t i = 0; i < numTotalNodes; i++)
     {
         dutyCycleTest[i] = 1 / rho * z[i];
