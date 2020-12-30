@@ -8,7 +8,7 @@ public:
     Command();
     Command(char cmd, uint8_t destination, char type);
     Command(char cmd, uint8_t destination, float value);
-    
+
     Command(uint8_t* buffer);
     size_t toByteArray(char* array);
 
@@ -20,12 +20,6 @@ public:
     int8_t cmd;  // Get (g), set(o, U, ..)
     uint8_t destination; //Destino
     uint32_t value; // Type (g I, g d) ou set value (float)
-    
-    //Nao deu para usar union devido a endianess e packing e cenas assim :(
-    /*union {
-        uint32_t value;
-        int8_t type;
-    } data;*/
 };
 
 #endif

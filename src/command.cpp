@@ -1,5 +1,7 @@
 #include "command.h"
 
+#include "convertion.h"
+
 Command::Command()
 {
 	cmd = '\0';
@@ -17,7 +19,7 @@ Command::Command(char cmd, uint8_t destination, float value)
 {
 	this->cmd = cmd;
 	this->destination = destination;
-	this->value = value;
+	setValue(value);
 }
 
 Command::Command(uint8_t* buffer)
@@ -51,9 +53,13 @@ char Command::getType()
 }
 void Command::setValue(float v)
 {
-	value = (uint32_t)v;
+	Convertion convertion;
+	convertion.valueFloat = v;
+	value = convertion.value32b;
 }
 float Command::getValue()
 {
-	return (float)value;
+	Convertion convertion;
+	convertion.value32b = value;
+	return convertion.valueFloat;
 }

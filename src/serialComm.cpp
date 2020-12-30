@@ -142,7 +142,7 @@ uint32_t SerialComm::executeCommand(Command command)
 		{
 			convert.floatValue = luminaire.cost;
 		}
-
+		convert.floatValue = 123.4567;
 
 		return convert.value;
 	}
