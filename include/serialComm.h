@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include "command.h"
+#include "controller.h"
+#include "luminaire.h"
 
 //TODO meter isto num sitio de jeito
 union Convertion

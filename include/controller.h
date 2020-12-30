@@ -8,6 +8,8 @@ class Controller
 private:
     float ui; // Feedback integrator control signal
 public:
+    float u; // Control signal (PWM)
+
     Controller();
 
     /**

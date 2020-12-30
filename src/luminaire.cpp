@@ -138,7 +138,9 @@ void Luminaire::initialCalibration()
 	analogWrite(LED_PIN, pwm2);
 	delay(1000);
 	int lux2 = voltageToLux(getVoltage());
-	systemGain = (float)(lux1-lux2) / (pwm1-pwm2);
+	
+	uint8_t nodeIdx = nodeIndexOnGainMatrix[nodeId];
+	systemGain = calibrationFSM.gainmatrix[nodeIdx][nodeIdx];
 
 	Serial.print(F("Calibration successful!\t Gain="));
 	Serial.println(systemGain, 8);
@@ -164,7 +166,8 @@ void Luminaire::setLuxRef(int lux)
 /**
  * Changes occupied state. (Calls setLuxRef)
  */
-void Luminaire::setOccupied(bool o) {
+void Luminaire::setOccupied(bool o) 
+{
 	occupied = o;
 
 	int lux = occupied ? LUX_OCCUPIED : LUX_NON_OCCUPIED;

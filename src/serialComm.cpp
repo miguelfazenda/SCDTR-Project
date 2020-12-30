@@ -12,10 +12,10 @@ union FloatTo4Bytes
  */
 void SerialComm::readSerial()
 {
-	while(Serial.available())
+	while (Serial.available())
 	{
 		uint8_t b = Serial.read();
-		if(b == 255)
+		if (b == 255)
 		{
 			// Syncronism byte was read. (255) This means a message is incoming
 			//Waits for and reads the command bytes
@@ -27,13 +27,13 @@ void SerialComm::readSerial()
 
 			/*Serial.print("[DEBUG] command destination = ");
 			Serial.println(command.destination);*/
-			if(command.cmd == 'D')
+			if (command.cmd == 'D')
 			{
 				//Received response from 'PC Discovery', which means it is now a hub node
 
 				//Store current time, so we know when it stopped receiving the response in some time
 				pcDiscoveryHadResponse = true;
-				if(hubNode != nodeId)
+				if (hubNode != nodeId)
 				{
 					Serial.print("[Debug] This node is now HUB");
 					hubNode = nodeId;
@@ -41,13 +41,13 @@ void SerialComm::readSerial()
 					serialComm.sendListNodesToPC();
 				}
 			}
-			else if(command.destination == 0)
+			else if (command.destination == 0)
 			{
 				//TODOS
 				//Sends the request for the command to all nodes except for this hub
-				for(uint8_t nodeIdx = 0; nodeIdx<numTotalNodes; nodeIdx++)
+				for (uint8_t nodeIdx = 0; nodeIdx < numTotalNodes; nodeIdx++)
 				{
-					if(nodesList[nodeIdx] == nodeId)
+					if (nodesList[nodeIdx] == nodeId)
 						//Ignore hub (only send CAN message to other nodes)
 						continue;
 
@@ -65,10 +65,10 @@ void SerialComm::readSerial()
 				//If the hub is the only node, send the total back
 				sendTotalIfAllValueForTotalReceived();
 			}
-			else if(command.destination == nodeId) 
+			else if (command.destination == nodeId)
 			{
 				//Este nó responde
-				
+
 				//Converts received bytes to object
 				//Command command(buf);
 				uint32_t responseValue = executeCommand(command);
@@ -76,8 +76,8 @@ void SerialComm::readSerial()
 			}
 			else
 			{
-				//Transmit command to other node
-				if(checkIfNodeExists(command.destination))
+				//Transmit on the CAN command to other node
+				if (checkIfNodeExists(command.destination))
 				{
 					Serial.println("Sending command request!");
 					communication.sendCommandRequest(command.destination, command);
@@ -98,23 +98,105 @@ void SerialComm::readSerial()
 /**
  * Returns: the response to this command (can be a float cast to uint32_t for example)
  */
-uint32_t SerialComm::executeCommand(Command command) {
-	if(command.cmd == 'g')
+uint32_t SerialComm::executeCommand(Command command)
+{
+	uint8_t nodeIdx = nodeIndexOnGainMatrix[nodeId];
+	if (command.cmd == 'g')
 	{
-		//readCommandGet(command.getValue(), command.destination);
 		FloatTo4Bytes convert;
-		convert.floatValue = random(128, 150)*0.213;
+		if (command.getType() == 'I')
+		{
+			float voltage = luminaire.getVoltage();
+			convert.floatValue = luminaire.voltageToLux(voltage);
+		}
+		else if (command.getType() == 'd')
+		{
+			convert.floatValue = controller.u * 100.0 / 255.0;
+		}
+		else if (command.getType() == 'o') //perguntar ao michel por causa do bool
+		{
+			convert.value = (luminance.ocupied == false) ? 0 : 1;
+		}
+		else if (command.getType() == "O")
+		{
+			convert.floatValue = luminaire.LUX_OCCUPIED;
+		}
+		else if (command.getType() == "U")
+		{
+			convert.floatValue = luminaire.LUX_NON_OCCUPIED;
+		}
+		else if (command.getType() == "L")
+		{
+			convert.floatValue = luminaire.luxRef;			
+		}
+		else if (command.getType() == "x")
+		{
+			convert.floatValue = calibrationFSM.residualArray[nodeIdx]; //falar com o michel para ser sempre o hub a mandar
+		}
+		else if (command.getType() == "r")
+		{
+			convert.floatValue = luminaire.luxRefAfterConsensus;
+		}
+		else if (command.getType() == "c")
+		{
+			convert.floatValue = luminaire.cost;
+		}
+
+			//readCommandGet(command.getValue(), command.destination);
+
+			/*convert.floatValue = random(128, 150)*0.213;
 		Serial.print("float: ");
-		Serial.println(convert.floatValue);
-		return convert.value;
+		Serial.println(convert.floatValue);*/
+			return convert.value;
 	}
-	else if(command.cmd == 'O' || command.cmd == 'U' || command.cmd == 'c')
+	else if (command.cmd == 'O' || command.cmd == 'U' || command.cmd == 'c')
 	{
+		if (command.getType() == "O")
+		{
+			if (luminaire.LUX_OCCUPIED != command.getValue())
+			{
+				luminaire.LUX_OCCUPIED = command.getValue();
+				//in case the node is occupied and we change it's refference we need to run consensus again
+				if (luminaire.occupied == true)
+				{
+					luminaire.luxRef = command.getValue();
+					consensus.consensusState = 1;
+				}
+			}
+		}
+		else if (command.getType() == "U")
+		{
+			if (luminaire.LUX_NON_OCCUPIED != command.getValue())
+			{
+				luminaire.LUX_NON_OCCUPIED = command.getValue();
+				//in case the node is occupied and we change it's refference we need to run consensus again
+				if (luminaire.occupied == false)
+				{
+					luminaire.luxRef = command.getValue();
+					consensus.consensusState = 1;
+				}
+			}
+		}
+		else if (command.getType() == "c")
+		{
+			if(luminaire.cost != command.getValue())
+			{
+				luminaire.cost = command.getValue();
+				consensus.consensusState = 1;
+				EEPROM.put(9, luminaire.cost);
+			}
+		}
 		return 1;
-		//readCommandSet(command.cmd, command.destination, command.getValue());
 	}
-	else if(command.cmd == 'o')
+	else if (command.cmd == 'o')
 	{
+
+		bool RecievedOccupiedState = command.getValue() == 1 ? true : false;
+		if (occupietState != luminaire.occupied)
+		{
+			luminaire.setOccupied(occupiedState);
+			consensus.consensusState = 1;
+		}
 		/*Serial.print("SET RECEIVED  ");
 		Serial.print((char) command.cmd);
 		Serial.print("  ");
@@ -151,9 +233,9 @@ void SerialComm::sendResponse(float value)
 
 void SerialComm::receivedCommandResponseFromCAN(uint8_t sender, uint32_t value)
 {
-	if(!runningTotalCommand)
+	if (!runningTotalCommand)
 	{
-		//The command running isn't a total command, because the 
+		//The command running isn't a total command, because the
 		sendResponse(value);
 	}
 	else
@@ -167,7 +249,6 @@ void SerialComm::receivedCommandResponseFromCAN(uint8_t sender, uint32_t value)
 		numNodesWaitingResult--;
 		sendTotalIfAllValueForTotalReceived();
 	}
-	
 }
 
 /**
@@ -176,7 +257,7 @@ void SerialComm::receivedCommandResponseFromCAN(uint8_t sender, uint32_t value)
  */
 void SerialComm::sendTotalIfAllValueForTotalReceived()
 {
-	if(numNodesWaitingResult == 0)
+	if (numNodesWaitingResult == 0)
 	{
 		//Send value
 		sendResponse(totalCommandResult);
@@ -189,17 +270,17 @@ void SerialComm::sendTotalIfAllValueForTotalReceived()
 //PC Discovery - sends message to see if pc responds
 void SerialComm::sendPCDiscovery()
 {
-	if(hubNode == nodeId)
+	if (hubNode == nodeId)
 	{
 		// If it's a hub node, it decides it is no longer connected to a PC if the computer
 		//   didn't respond to the last descovery message
-		if(!pcDiscoveryHadResponse)
+		if (!pcDiscoveryHadResponse)
 		{
 			hubNode = 0;
 			communication.sendBroadcastNoLongerIsHubNode();
 		}
 	}
-	
+
 	// Sets as false so we check next time if it was changed to true
 	pcDiscoveryHadResponse = false;
 
@@ -217,7 +298,7 @@ void SerialComm::sendListNodesToPC()
 	Serial.write('L');
 	//Indicates the number of nodes
 	Serial.write(numTotalNodes);
-	for(uint8_t i = 0; i<numTotalNodes; i++)
+	for (uint8_t i = 0; i < numTotalNodes; i++)
 		Serial.write(nodesList[i]);
 
 	Serial.flush();

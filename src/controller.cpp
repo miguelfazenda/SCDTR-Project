@@ -7,12 +7,13 @@
 Controller::Controller()
 {
 	ui = 0.0f;
+	u=0;
 }
 
 int Controller::calc(float errorVoltage, unsigned long samplingTime, int luxRef, float systemGain) {
 	int uff; // Feedforward control signal (PWM)
 	float up; // Feedback control signal (PWM)
-	int u; // Control signal (PWM)
+	
 
 	//Feedforward
 	uff = luxRef/systemGain;

@@ -7,12 +7,16 @@
 void Consensus::init()
 {
     nodeIdx = nodeIndexOnGainMatrix[nodeId];
-
+    consensusState = 1;
+    numIter = 0;
     //cost[nodeIdx] = luminaire.cost;
     ki = calibrationFSM.gainMatrix[nodeIdx];
     for (uint8_t i = 0; i < numTotalNodes; i++)
     {
         kiNorm += pow(ki[i], 2);
+        dutyCycleBest[i]=0.0;
+        dutyCycleAv[i] = 0.0;
+        lagrangeMultipliers[i] = 0.0;
     }
 
     kinormKiiDiff = kiNorm - pow(ki[nodeIdx], 2);
@@ -240,9 +244,12 @@ void Consensus::consensus_main()
             consensusState = 0;
             numIter = 0;
             numberOfMsgReceived = 0;
+            
             Serial.println(dutyCycleBest[0]);
             Serial.println(dutyCycleBest[1]);
             Serial.println(dutyCycleBest[2]);
+
+            luminaire.luxRefAfterConsensus = (dutyCycleBest[nodeIdx]*250.0/100.0)*ki[nodeIdx] - calibrationFSM.residualArray[nodeIdx];
         }
     }
 }
@@ -264,4 +271,23 @@ float Consensus::multiplyTwoArrays(float *array1, float *array2, uint8_t dimenti
         mult += array1[i] * array2[i];
     }
     return mult;
+}
+
+
+void resetConsensus()
+{
+    dutyCycleAv[MAX_NUM_NODES] = {0.0};
+    lagrangeMultipliers[MAX_NUM_NODES] = {0.0};
+    ki = nullptr;
+    kiNorm = 0;
+    kinormKiiDiff = 0;
+    receivedDutyCycle[MAX_NUM_NODES] = {0.0};
+    LiRef = 0;
+    rho = 0.07;
+    nodeIdx = -1;
+    maxIter = 50;
+    numberOfMsgReceived = 0;
+    numIter = 0;
+    consensusState = 0; 
+    dutyCycleBest[MAX_NUM_NODES] = {0.0};
 }
