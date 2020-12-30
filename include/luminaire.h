@@ -13,7 +13,6 @@
 class Luminaire {
 private:
     Simulador simulator;
-    Controller controller;
     unsigned long lastSampleTime = 0;
     unsigned long lpfSampleTime = 0;
     float ldrSlopeB = 0.0f;
@@ -25,11 +24,15 @@ private:
     void control(unsigned long timeNow, unsigned long samplingTime);
     void initialCalibration();
 public:
+    Controller controller;
     //TODO ver se o professor prefere que crie um getter
     bool occupied = false;
     int luxRef;
     int luxRefAfterConsensus;
+    float LUX_OCCUPIED = 20.0;
+    float LUX_NON_OCCUPIED = 10.0;
     float cost;
+
 
     void init(bool occupied);
     void loop();

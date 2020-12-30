@@ -140,7 +140,7 @@ void Luminaire::initialCalibration()
 	int lux2 = voltageToLux(getVoltage());
 	
 	uint8_t nodeIdx = nodeIndexOnGainMatrix[nodeId];
-	systemGain = calibrationFSM.gainmatrix[nodeIdx][nodeIdx];
+	systemGain = calibrationFSM.gainMatrix[nodeIdx][nodeIdx];
 
 	Serial.print(F("Calibration successful!\t Gain="));
 	Serial.println(systemGain, 8);

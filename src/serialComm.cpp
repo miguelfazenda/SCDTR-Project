@@ -1,4 +1,5 @@
 #include "serialComm.h"
+#include "EEPROM.h"
 #include "glob.h"
 
 union FloatTo4Bytes
@@ -111,33 +112,33 @@ uint32_t SerialComm::executeCommand(Command command)
 		}
 		else if (command.getType() == 'd')
 		{
-			convert.floatValue = controller.u * 100.0 / 255.0;
+			convert.floatValue = luminaire.controller.u * 100.0 / 255.0;
 		}
 		else if (command.getType() == 'o') //perguntar ao michel por causa do bool
 		{
-			convert.value = (luminance.ocupied == false) ? 0 : 1;
+			convert.value = (luminaire.occupied == false) ? 0 : 1;
 		}
-		else if (command.getType() == "O")
+		else if (command.getType() == 'O')
 		{
 			convert.floatValue = luminaire.LUX_OCCUPIED;
 		}
-		else if (command.getType() == "U")
+		else if (command.getType() == 'U')
 		{
 			convert.floatValue = luminaire.LUX_NON_OCCUPIED;
 		}
-		else if (command.getType() == "L")
+		else if (command.getType() == 'L')
 		{
 			convert.floatValue = luminaire.luxRef;			
 		}
-		else if (command.getType() == "x")
+		else if (command.getType() == 'x')
 		{
 			convert.floatValue = calibrationFSM.residualArray[nodeIdx]; //falar com o michel para ser sempre o hub a mandar
 		}
-		else if (command.getType() == "r")
+		else if (command.getType() == 'r')
 		{
 			convert.floatValue = luminaire.luxRefAfterConsensus;
 		}
-		else if (command.getType() == "c")
+		else if (command.getType() == 'c')
 		{
 			convert.floatValue = luminaire.cost;
 		}
@@ -151,7 +152,7 @@ uint32_t SerialComm::executeCommand(Command command)
 	}
 	else if (command.cmd == 'O' || command.cmd == 'U' || command.cmd == 'c')
 	{
-		if (command.getType() == "O")
+		if (command.getType() == 'O')
 		{
 			if (luminaire.LUX_OCCUPIED != command.getValue())
 			{
@@ -164,7 +165,7 @@ uint32_t SerialComm::executeCommand(Command command)
 				}
 			}
 		}
-		else if (command.getType() == "U")
+		else if (command.getType() == 'U')
 		{
 			if (luminaire.LUX_NON_OCCUPIED != command.getValue())
 			{
@@ -177,7 +178,7 @@ uint32_t SerialComm::executeCommand(Command command)
 				}
 			}
 		}
-		else if (command.getType() == "c")
+		else if (command.getType() == 'c')
 		{
 			if(luminaire.cost != command.getValue())
 			{
@@ -192,9 +193,9 @@ uint32_t SerialComm::executeCommand(Command command)
 	{
 
 		bool RecievedOccupiedState = command.getValue() == 1 ? true : false;
-		if (occupietState != luminaire.occupied)
+		if (RecievedOccupiedState != luminaire.occupied)
 		{
-			luminaire.setOccupied(occupiedState);
+			luminaire.setOccupied(RecievedOccupiedState);
 			consensus.consensusState = 1;
 		}
 		/*Serial.print("SET RECEIVED  ");

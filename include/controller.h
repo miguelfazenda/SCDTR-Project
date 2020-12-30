@@ -16,7 +16,7 @@ public:
      * Returns the control signal (PWM signal to be applied to LED)
      * @param gain The gain of the system
      */
-    int calc(float errorVoltage, unsigned long samplingTime, int luxRef, float gain, float residualRead);
+    int calc(float errorVoltage, unsigned long samplingTime, float luxRef, float systemGain, float residualRead);
 };
 
 #endif
