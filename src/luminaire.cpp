@@ -83,6 +83,8 @@ void Luminaire::control(unsigned long timeNow, unsigned long samplingTime)
 	//Apply error to the controller to get the PWM value
 	//int pwm = 0;//
 	float residualRead = calibrationFSM.residualArray[nodeIndexOnGainMatrix[nodeId]];
+	Serial.print(F("No CONTROLADOR ----->"));
+	Serial.println(luxRefAfterConsensus);
 	int pwm = controller.calc(errorVoltage, samplingTime, luxRefAfterConsensus, systemGain, residualRead);
 
 	//Apply PWM SIGNAL

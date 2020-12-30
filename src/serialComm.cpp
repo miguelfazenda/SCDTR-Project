@@ -114,7 +114,7 @@ uint32_t SerialComm::executeCommand(Command command)
 		{
 			convert.floatValue = luminaire.controller.u * 100.0 / 255.0;
 		}
-		else if (command.getType() == 'o') //perguntar ao michel por causa do bool
+		else if (command.getType() == 'o')
 		{
 			convert.value = (luminaire.occupied == false) ? 0 : 1;
 		}
