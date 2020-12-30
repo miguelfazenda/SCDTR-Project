@@ -97,7 +97,7 @@ void SerialComm::readSerial()
 }
 
 /**
- * Returns: the response to this command (can be a float cast to uint32_t for example)
+ * Returns: the response to this command (can be a float conve to uint32_t for example)
  */
 uint32_t SerialComm::executeCommand(Command command)
 {
@@ -143,12 +143,8 @@ uint32_t SerialComm::executeCommand(Command command)
 			convert.floatValue = luminaire.cost;
 		}
 
-			//readCommandGet(command.getValue(), command.destination);
 
-			/*convert.floatValue = random(128, 150)*0.213;
-		Serial.print("float: ");
-		Serial.println(convert.floatValue);*/
-			return convert.value;
+		return convert.value;
 	}
 	else if (command.cmd == 'O' || command.cmd == 'U' || command.cmd == 'c')
 	{

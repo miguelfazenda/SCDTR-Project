@@ -9,67 +9,68 @@
 //TODO meter isto num sitio de jeito
 union Convertion
 {
+    uint32_t value16b;
     uint32_t value32b;
     uint8_t valueBytes[4];
     float valueFloat;
 };
 
 #define SERIAL_FREQUENT_DATA_PACKET_SIZE 6
-class SerialFrequentDataPacket {
+class SerialFrequentDataPacket
+{
 public:
     SerialFrequentDataPacket(uint8_t node, float iluminance, uint8_t pwm)
     {
         this->node = node;
-        this->iluminance = iluminance;
+        //Convert float to short
+        this->iluminanceShort = (uint16_t)(iluminance * 10);
         this->pwm = pwm;
     }
 
     SerialFrequentDataPacket(uint8_t* buffer)
     {
         this->node = buffer[0];
-        this->iluminance = float((uint32_t)(buffer[1]) << 24 |
-            (uint32_t)(buffer[2]) << 16 |
-            (uint32_t)(buffer[3]) << 8 |
-            (uint32_t)(buffer[4]));
+
+        //Convert 2 bytes to short
+        Convertion illuminanceConvertion;
+        illuminanceConvertion.valueBytes[0] = buffer[1];
+        illuminanceConvertion.valueBytes[0] = buffer[2];
+        this->iluminanceShort = illuminanceConvertion.value16b;
 
         this->pwm = buffer[5];
     }
 
     size_t toByteArray(uint8_t* array)
     {
-        //Convert float to 4 bytes
+        //Convert short to 2 bytes
         Convertion illuminanceConvertion;
-        illuminanceConvertion.valueFloat = iluminance;
+        illuminanceConvertion.value16b = iluminanceShort;
 
         array[0] = node;
         array[1] = illuminanceConvertion.valueBytes[0];
         array[2] = illuminanceConvertion.valueBytes[1];
-        array[3] = illuminanceConvertion.valueBytes[2];
-        array[4] = illuminanceConvertion.valueBytes[3];
-        array[5] = pwm;
+        array[3] = pwm;
 
-        return 6;
+        return 4;
     }
 
     void sendOnSerial()
     {
-        //Convert float to 4 bytes
+        //Convert short to 2 bytes
         Convertion illuminanceConvertion;
-        illuminanceConvertion.valueFloat = iluminance;
-
+        illuminanceConvertion.value16b = iluminanceShort;
+        
         Serial.write(255);
         Serial.write('F');
         Serial.write(node);
         Serial.write(illuminanceConvertion.valueBytes[0]);
         Serial.write(illuminanceConvertion.valueBytes[1]);
-        Serial.write(illuminanceConvertion.valueBytes[2]);
-        Serial.write(illuminanceConvertion.valueBytes[3]);
         Serial.write(pwm);
         Serial.flush();
     }
 
     uint8_t node;
-    float iluminance;
+    uint16_t iluminanceShort;  //iluminance float * 10
     int8_t pwm;
 };
 

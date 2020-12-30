@@ -144,7 +144,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     {
         //In each bit is stored the sign of the value in the frame data i
         // 0 if positive or zero; 1 if negative
-        uint8_t signByte = frame->data[7];
+        uint8_t signByte = frame->data[numTotalNodes];
         int8_t sign = 0;
     
         Serial.print(F("Received consensus dutycycle value response from "));
@@ -248,7 +248,7 @@ MCP2515::ERROR Communication::sendConsensusDutyCycle(float* val)
 
     can_frame frame;
     frame.can_id = canMessageId(0, CAN_CONSENSUS);
-    frame.can_dlc = 8;
+    frame.can_dlc = numTotalNodes + 1;
     float aux = 0.0;
     for (int i = 0; i < numTotalNodes; i++) //prepare can message
     { 
@@ -256,7 +256,7 @@ MCP2515::ERROR Communication::sendConsensusDutyCycle(float* val)
         frame.data[i] = (uint8_t) abs(aux); //converting each value of the array to a byte
         signByte = signByte | (val[i] < 0) << i;
     }
-    frame.data[7] = signByte;
+    frame.data[numTotalNodes] = signByte;
     //send data
     return mcp2515->sendMessage(&frame);
 }
