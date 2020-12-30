@@ -120,11 +120,11 @@ uint32_t SerialComm::executeCommand(Command command)
 		}
 		else if (command.getType() == 'O')
 		{
-			convert.floatValue = luminaire.LUX_OCCUPIED;
+			convert.floatValue = luminaire.luxOccupied;
 		}
 		else if (command.getType() == 'U')
 		{
-			convert.floatValue = luminaire.LUX_NON_OCCUPIED;
+			convert.floatValue = luminaire.luxNonOccupied;
 		}
 		else if (command.getType() == 'L')
 		{
@@ -154,9 +154,9 @@ uint32_t SerialComm::executeCommand(Command command)
 	{
 		if (command.getType() == 'O')
 		{
-			if (luminaire.LUX_OCCUPIED != command.getValue())
+			if (luminaire.luxOccupied != command.getValue())
 			{
-				luminaire.LUX_OCCUPIED = command.getValue();
+				luminaire.luxOccupied = command.getValue();
 				//in case the node is occupied and we change it's refference we need to run consensus again
 				if (luminaire.occupied == true)
 				{
@@ -167,9 +167,9 @@ uint32_t SerialComm::executeCommand(Command command)
 		}
 		else if (command.getType() == 'U')
 		{
-			if (luminaire.LUX_NON_OCCUPIED != command.getValue())
+			if (luminaire.luxNonOccupied != command.getValue())
 			{
-				luminaire.LUX_NON_OCCUPIED = command.getValue();
+				luminaire.luxNonOccupied = command.getValue();
 				//in case the node is occupied and we change it's refference we need to run consensus again
 				if (luminaire.occupied == false)
 				{

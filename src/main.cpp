@@ -208,7 +208,6 @@ void loop()
 	}
 
 	mainFSM.loop();
-	//luminaire.loop();
 	if (consensus.consensusState != 0)
 	{
 		consensus.consensus_main();

@@ -22,23 +22,23 @@ private:
     float systemGain;
 
     void control(unsigned long timeNow, unsigned long samplingTime);
-    void initialCalibration();
 public:
     Controller controller;
     //TODO ver se o professor prefere que crie um getter
     bool occupied = false;
     int luxRef;
     int luxRefAfterConsensus;
-    float LUX_OCCUPIED = 20.0;
-    float LUX_NON_OCCUPIED = 10.0;
+    float luxOccupied = 100.0;
+    float luxNonOccupied = 30.0;
     float cost;
 
 
     void init(bool occupied);
     void loop();
 
-    void setLuxRef(int lux);
+    void setLuxRefAfterConsensus(int lux);
     void setOccupied(bool o);
+    void setSystemGain(float Kii);
 
     float luxToVoltage(int lux);
     float voltageToLux(float voltage);

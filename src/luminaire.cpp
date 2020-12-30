@@ -24,15 +24,6 @@ void Luminaire::init(bool occupied) {
 	EEPROM.get(EEPROM_ADDR_SLOPEB, ldrSlopeB);
 	EEPROM.get(EEPROM_ADDR_COST, cost);
 
-	// Serial.print("--------[Physical Param]--------");
-	// Serial.println(ldrSlopeM);
-	// Serial.println(ldrSlopeB);
-	// Serial.println(nodeId);
-	// Serial.print("--------[End Physical Param]--------");
-
-	//Calibrates
-	//initialCalibration();
-
 	// Changes the desired LUX value
 	setOccupied(occupied);
 
@@ -79,8 +70,8 @@ void Luminaire::control(unsigned long timeNow, unsigned long samplingTime)
 {
 	//Measure error compared to expected voltage
 	float expectedVoltage = simulator.simulate(timeNow);
-	//float measuredVoltage = getVoltage();
-	float measuredVoltage = lpf.value(); //Gets voltage from the low-pass filter
+	float measuredVoltage = getVoltage();
+	//float measuredVoltage = lpf.value(); //Gets voltage from the low-pass filter
 	float errorVoltage = expectedVoltage - measuredVoltage;
 
 	//Ignores very small errors as they are caused by noise
@@ -90,7 +81,9 @@ void Luminaire::control(unsigned long timeNow, unsigned long samplingTime)
 	}
 
 	//Apply error to the controller to get the PWM value
-	int pwm = 0;//controller.calc(errorVoltage, samplingTime, luxRef, systemGain);
+	//int pwm = 0;//
+	float residualRead = calibrationFSM.residualArray[nodeIndexOnGainMatrix[nodeId]];
+	int pwm = controller.calc(errorVoltage, samplingTime, luxRefAfterConsensus, systemGain, residualRead);
 
 	//Apply PWM SIGNAL
 	analogWrite(LED_PIN, pwm);
@@ -113,54 +106,20 @@ void Luminaire::control(unsigned long timeNow, unsigned long samplingTime)
 	Serial.println(voltageToLux(measuredVoltage));
 #else
 	//Serial plotter prints
-	Serial.print(voltageToLux(measuredVoltage));
-	Serial.print(",");
-	Serial.println(voltageToLux(expectedVoltage));
+	// Serial.print(voltageToLux(measuredVoltage));
+	// Serial.print(",");
+	// Serial.println(voltageToLux(expectedVoltage));
 #endif
 }
 
-/**
- * Performs the initial system calibration:
- * 		- Calculates the gain of the system (LUX/PWM) 
- */
-void Luminaire::initialCalibration()
-{
-	Serial.println("\nStarting calibration");
-
-	const int pwm1 = 20;
-	const int pwm2 = 240;
-
-	//Calibrate gain
-	analogWrite(LED_PIN, pwm1);
-	delay(1000);
-	int lux1 = voltageToLux(getVoltage());
-
-	analogWrite(LED_PIN, pwm2);
-	delay(1000);
-	int lux2 = voltageToLux(getVoltage());
-	
-	uint8_t nodeIdx = nodeIndexOnGainMatrix[nodeId];
-	systemGain = calibrationFSM.gainMatrix[nodeIdx][nodeIdx];
-
-	Serial.print(F("Calibration successful!\t Gain="));
-	Serial.println(systemGain, 8);
-	Serial.print(F(" from PWM="));
-	Serial.print(pwm1);
-	Serial.print(" lux=");
-	Serial.print(lux1);
-	Serial.print(" and PWM=");
-	Serial.print(pwm2);
-	Serial.print(" lux=");
-	Serial.println(lux2);
-}
 
 /**
  * Sets the lux reference, and starts a step on the simulator 
  */
-void Luminaire::setLuxRef(int lux)
+void Luminaire::setLuxRefAfterConsensus(int lux)
 {
-	luxRef = lux;
-	simulator.startStep(getVoltage(), luxToVoltage(luxRef));
+	luxRefAfterConsensus = lux;
+	simulator.startStep(getVoltage(), luxToVoltage(luxRefAfterConsensus));
 }
 
 /**
@@ -170,8 +129,8 @@ void Luminaire::setOccupied(bool o)
 {
 	occupied = o;
 
-	int lux = occupied ? LUX_OCCUPIED : LUX_NON_OCCUPIED;
-	setLuxRef(lux);
+	int lux = occupied ? luxOccupied : luxNonOccupied;
+	luxRef = lux; //setLuxRef(lux);
 
 	Serial.print(F("OCCUPIED\tReference:\tLux="));
 	Serial.print(lux);
@@ -179,7 +138,10 @@ void Luminaire::setOccupied(bool o)
 	Serial.println(luxToVoltage(lux));
 }
 
-
+void Luminaire::setSystemGain(float Kii)
+{
+	systemGain = Kii;
+}
 
 
 float Luminaire::luxToVoltage(int lux) {

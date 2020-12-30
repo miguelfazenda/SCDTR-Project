@@ -229,8 +229,7 @@ void CalibrationFSM::receivedGainOrResidual(uint8_t sender, float value)
     }
     else
     {
-        //nodeLedOn + 1  -> when it is reading the residual, nodeLedOn = -1, so it writed on j=0
-        setGain(nodeLedOn, nodeIndexOnGainMatrix[sender], value);
+        setGain(nodeIndexOnGainMatrix[sender], nodeLedOn, value);
     }
 }
 
