@@ -30,6 +30,7 @@ private:
     can_frame_stream* cf_stream;
     struct can_frame sendingFrame;
     
+    MCP2515::ERROR sendFrame();
     /**
      * CAN_RESPONSE_GET_LUMINAIRE_DATA
      * Broacasts the luminaire's status (PWM, occupation, etc.)

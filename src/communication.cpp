@@ -48,6 +48,22 @@ MCP2515::ERROR Communication::writeFloat(uint32_t id, uint32_t val)
     return mcp2515->sendMessage(&frame);
 }
 
+/**
+ *  Sends the sendingFrame, and prints an error if there was one
+ */
+MCP2515::ERROR Communication::sendFrame()
+{
+    MCP2515::ERROR error = mcp2515->sendMessage(&sendingFrame);
+    if(error != MCP2515::ERROR_OK)
+    {
+        Serial.print(F("[ERROR] Error "));
+        Serial.print(error);
+        Serial.print(F(" sending can frame ID=0x"));
+        Serial.println(sendingFrame.can_id, HEX);
+    }
+    return error;
+}
+
 void Communication::received(Luminaire *luminaire, can_frame *frame)
 {
     Serial.print(F("[Comm] Received can frame id=0x"));
@@ -177,7 +193,7 @@ void Communication::sendCommandResponse(uint8_t sender, uint32_t value) {
     sendingFrame.data[2] = sendingValue.valueBytes[2];
     sendingFrame.data[3] = sendingValue.valueBytes[3];
     sendingFrame.can_dlc = 4;
-    mcp2515->sendMessage(&sendingFrame);
+    sendFrame();
 }
 
 void Communication::sendCommandRequest(uint8_t destination, Command& command) {
@@ -189,7 +205,8 @@ void Communication::sendCommandRequest(uint8_t destination, Command& command) {
     size_t numBytes = command.toByteArray((char*)sendingFrame.data);
     sendingFrame.can_dlc = numBytes;
 
-    mcp2515->sendMessage(&sendingFrame);
+    sendFrame();
+
 }
 
 void Communication::sendBroadcastWakeup()
@@ -197,14 +214,14 @@ void Communication::sendBroadcastWakeup()
     Serial.println("[Comm] Sending CAN_WAKEUP_BROADCAST");
     sendingFrame.can_id = canMessageId(0, CAN_WAKEUP_BROADCAST);
     sendingFrame.can_dlc = 0;
-    mcp2515->sendMessage(&sendingFrame);
+    sendFrame();
 }
 void Communication::sendCalibLedOn()
 {
     Serial.println(F("[Comm] Sending Calib_Led_on"));
     sendingFrame.can_id = canMessageId(0, CAN_CALIB_LED_ON);
     sendingFrame.can_dlc = 0;
-    mcp2515->sendMessage(&sendingFrame);
+    sendFrame();
 }
 
 void Communication::sendCalibReady(float val)
@@ -221,7 +238,7 @@ void Communication::sendCalibReady(float val)
     sendingFrame.data[2] = p[2];
     sendingFrame.data[3] = p[3];
 
-    mcp2515->sendMessage(&sendingFrame);
+    sendFrame();
 }
 
 /**
@@ -237,7 +254,7 @@ void Communication::sendFrequentDataToHub(SerialFrequentDataPacket frequentDataP
     size_t numBytes = frequentDataPacket.toByteArray(sendingFrame.data);
     sendingFrame.can_dlc = numBytes;
 
-    mcp2515->sendMessage(&sendingFrame);
+    sendFrame();
 }
 
 MCP2515::ERROR Communication::sendConsensusDutyCycle(float* val)
@@ -246,19 +263,19 @@ MCP2515::ERROR Communication::sendConsensusDutyCycle(float* val)
     // 0 if positive or zero; 1 if negative
     uint8_t signByte = 0;
 
-    can_frame frame;
-    frame.can_id = canMessageId(0, CAN_CONSENSUS);
-    frame.can_dlc = numTotalNodes + 1;
+    sendingFrame.can_id = canMessageId(0, CAN_CONSENSUS);
+    sendingFrame.can_dlc = numTotalNodes + 1;
     float aux = 0.0;
     for (int i = 0; i < numTotalNodes; i++) //prepare can message
     { 
         aux = round(val[i]*255.0/100.0);
-        frame.data[i] = (uint8_t) abs(aux); //converting each value of the array to a byte
+        sendingFrame.data[i] = (uint8_t) abs(aux); //converting each value of the array to a byte
         signByte = signByte | (val[i] < 0) << i;
     }
-    frame.data[numTotalNodes] = signByte;
+    sendingFrame.data[numTotalNodes] = signByte;
     //send data
-    return mcp2515->sendMessage(&frame);
+
+    return sendFrame();
 }
 
 /**
@@ -268,12 +285,12 @@ void Communication::sendBroadcastIsHubNode()
 {
     sendingFrame.can_id = canMessageId(0, CAN_IS_HUB_NODE);
     sendingFrame.can_dlc = 0;
-    mcp2515->sendMessage(&sendingFrame);
+    sendFrame();
 }
 
 void Communication::sendBroadcastNoLongerIsHubNode()
 {
     sendingFrame.can_id = canMessageId(0, CAN_NO_LONGER_IS_HUB_NODE);
     sendingFrame.can_dlc = 0;
-    mcp2515->sendMessage(&sendingFrame);
+    sendFrame();
 }
