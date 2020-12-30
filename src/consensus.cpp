@@ -221,7 +221,7 @@ void Consensus::consensus_main()
             consensusState = 4;
         }
     }
-
+    Serial.println(consensusState);
     if (consensusState == 4)
     {
         //Serial.println(F("---AVG----"));
@@ -238,7 +238,7 @@ void Consensus::consensus_main()
         {
             receivedDutyCycle[i] = 0;
         }
-
+        Serial.print(numIter); Serial.print("   "); Serial.print(maxIter);  Serial.print("   "); 
         if (numIter == maxIter)
         {
             consensusState = 0;
@@ -248,12 +248,12 @@ void Consensus::consensus_main()
             Serial.println(dutyCycleBest[0]);
             Serial.println(dutyCycleBest[1]);
             Serial.println(dutyCycleBest[2]);
-
-            //luminaire.luxRefAfterConsensus = (dutyCycleBest[nodeIdx]*250.0/100.0)*ki[nodeIdx] - calibrationFSM.residualArray[nodeIdx];
             
             //New lux reference, after consensus. dutyCycleBest is in %, we must convert it to 0-255 range and convert to lux
             float newLuxRef = (dutyCycleBest[nodeIdx]*255.0/100.0) * ki[nodeIdx] - calibrationFSM.residualArray[nodeIdx];
-            luminaire.setLuxRefAfterConsensus(newLuxRef); //Change luxRefAfterConsensus and starts simulation
+           	Serial.print(F("No FINAL DO CONENSUS ----->"));
+        	Serial.println(newLuxRef);
+           luminaire.setLuxRefAfterConsensus(newLuxRef); //Change luxRefAfterConsensus and starts simulation
         }
     }
 }
