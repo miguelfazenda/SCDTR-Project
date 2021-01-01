@@ -66,7 +66,7 @@ MCP2515::ERROR Communication::sendFrame()
 
 void Communication::received(Luminaire *luminaire, can_frame *frame)
 {
-    Serial.print(F("[Comm] Received can frame id=0x"));
+    //Serial.print(F("[Comm] Received can frame id=0x"));
     Serial.println(frame->can_id, HEX);
 
     uint8_t msgType = frame->can_id & 0x000000FF; //GETs first 8 bits that have the type
