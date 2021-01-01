@@ -6,6 +6,7 @@
 
 void Consensus::init()
 {
+    Serial.println(F("---- CONSENSUS INIT"));
     nodeIdx = nodeIndexOnGainMatrix[nodeId];
     consensusState = 1;
     numIter = 0;
@@ -78,8 +79,8 @@ void Consensus::consensus_iterate()
         cost_unconstrained = evaluate_cost(dutyCycleTest);
         if (cost_unconstrained < costBest)
         {
-            // Serial.print(F("Foi escolhido unconstrained -> "));
-            // Serial.println(cost_unconstrained);
+            Serial.print(F("Foi escolhido unconstrained -> "));
+            Serial.println(cost_unconstrained);
             memcpy(dutyCycleBest, dutyCycleTest, numTotalNodes * sizeof(float));
             costBest = cost_unconstrained;
         }
@@ -98,8 +99,8 @@ void Consensus::consensus_iterate()
         costBoundaryLinear = evaluate_cost(dutyCycleTest);
         if (costBoundaryLinear < costBest)
         {
-            // Serial.print(F("Foi escolhido linear -> "));
-            // Serial.println(costBoundaryLinear);
+            Serial.print(F("Foi escolhido linear -> "));
+            Serial.println(costBoundaryLinear);
             memcpy(dutyCycleBest, dutyCycleTest, numTotalNodes * sizeof(float));
             costBest = costBoundaryLinear;
         }
@@ -119,8 +120,8 @@ void Consensus::consensus_iterate()
         costBoundary0 = evaluate_cost(dutyCycleTest);
         if (costBoundary0 < costBest)
         {
-            // Serial.print(F("Foi escolhido 0 -> "));
-            // Serial.println(costBoundary0);
+            Serial.print(F("Foi escolhido 0 -> "));
+            Serial.println(costBoundary0);
             memcpy(dutyCycleBest, dutyCycleTest, numTotalNodes * sizeof(float));
             costBest = costBoundary0;
         }
@@ -141,8 +142,8 @@ void Consensus::consensus_iterate()
         float costBoundary100 = evaluate_cost(dutyCycleTest);
         if (costBoundary100 < costBest)
         {
-            // Serial.print(F("Foi escolhido 100 -> "));
-            // Serial.println(costBoundary100);
+            Serial.print(F("Foi escolhido 100 -> "));
+            Serial.println(costBoundary100);
             memcpy(dutyCycleBest, dutyCycleTest, numTotalNodes * sizeof(float));
             costBest = costBoundary100;
         }
@@ -163,8 +164,8 @@ void Consensus::consensus_iterate()
         costBoundaryL0 = evaluate_cost(dutyCycleTest);
         if (costBoundaryL0 < costBest)
         {
-            // Serial.print(F("Foi escolhido L0 -> "));
-            // Serial.println(costBoundaryL0);
+            Serial.print(F("Foi escolhido L0 -> "));
+            Serial.println(costBoundaryL0);
             memcpy(dutyCycleBest, dutyCycleTest, numTotalNodes * sizeof(float));
             costBest = costBoundaryL0;
         }
@@ -185,8 +186,8 @@ void Consensus::consensus_iterate()
         costBoundaryL100 = evaluate_cost(dutyCycleTest);
         if (costBoundaryL100 < costBest)
         {
-            // Serial.print(F("Foi escolhido L100 -> "));
-            // Serial.println(costBoundaryL100);
+            Serial.print(F("Foi escolhido L100 -> "));
+            Serial.println(costBoundaryL100);
             memcpy(dutyCycleBest, dutyCycleTest, numTotalNodes * sizeof(float));
             costBest = costBoundaryL100;
         }
@@ -198,40 +199,40 @@ void Consensus::consensus_main()
 
     if (consensusState == 1)
     {
-        //Serial.println(F("-- Consensus Iterate --"));
+        Serial.println(F("-- Consensus Iterate --"));
         consensus_iterate();
-        // Serial.println(dutyCycleBest[0]);
-        // Serial.println(dutyCycleBest[1]);
-        // Serial.println(dutyCycleBest[2]);
+        Serial.println(dutyCycleBest[0]);
+        Serial.println(dutyCycleBest[1]);
+        Serial.println(dutyCycleBest[2]);
         consensusState = 2;
     }
 
     if (consensusState == 2)
     {
-        //Serial.println(F("-------- Sending dutyCycle ----------"));
+        Serial.println(F("-------- Sending dutyCycle ----------"));
         communication.sendConsensusDutyCycle(dutyCycleBest);
         consensusState = 3;
     }
 
     if (consensusState == 3)
     {
-        if (numberOfMsgReceived == numTotalNodes - 1)
+        Serial.print(F("numberOfMsgReceived -> ")); Serial.println(numberOfMsgReceived);
+        if (numberOfMsgReceived == numTotalNodes - 1) /Ou >= ?????
         {
-            numberOfMsgReceived = 0;
             consensusState = 4;
         }
     }
-    Serial.println(consensusState);
+    Serial.print(F("Consensus -> ")); Serial.println(consensusState);
     if (consensusState == 4)
     {
         //Serial.println(F("---AVG----"));
         for (uint8_t j = 0; j < numTotalNodes; j++)
         {
-            dutyCycleAv[j] = (receivedDutyCycle[j] + dutyCycleBest[j]) / numTotalNodes;
+            dutyCycleAv[j] = (receivedDutyCycle[j] + dutyCycleBest[j]) / (numberOfMsgReceived+1);
             lagrangeMultipliers[j] += rho * (dutyCycleBest[j] - dutyCycleAv[j]);
         }
         //Serial.println(F("---END AVG----"));
-
+        numberOfMsgReceived = 0;
         consensusState = 1;
         numIter += 1;
         for (uint8_t i = 0; i < numTotalNodes; i++)
@@ -263,6 +264,7 @@ void Consensus::receivedMsg(float *receivedArray)
     for (uint8_t i = 0; i < numTotalNodes; i++)
     {
         receivedDutyCycle[i] += receivedArray[i];
+        Serial.println(receivedArray[i]);
     }
     numberOfMsgReceived += 1;
 }

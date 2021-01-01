@@ -34,9 +34,6 @@ volatile bool arduino_overflow = false;
 
 /*volatile*/ can_frame_stream cf_stream;
 
-bool used_RX0 = false;
-bool used_RX1 = false;
-
 //frequent data is the iluminance and duty cycle that should be periodicaly sent
 unsigned long timeLastSentFrequentData = 0;
 
@@ -121,12 +118,16 @@ void registerNewNode(uint8_t id)
 	}
 }
 
+bool deuMerda = false;
+
 void irqHandler()
 {
-
+	bool used_RX0 = false;
+	bool used_RX1 = false;
 	can_frame frm;
 	uint8_t irq = mcp2515.getInterrupts();
 	//check messages in buffer 0
+	
 	if (irq & MCP2515::CANINTF_RX0IF)
 	{
 		used_RX0 = true;
@@ -137,6 +138,7 @@ void irqHandler()
 			arduino_overflow = true;
 	}
 	//check messages in buffer 1
+	irq = mcp2515.getInterrupts();
 	if (irq & MCP2515::CANINTF_RX1IF)
 	{
 		used_RX1 = true;
@@ -146,19 +148,25 @@ void irqHandler()
 		if (!cf_stream.put(frm)) //no space
 			arduino_overflow = true;
 	}
-	irq = mcp2515.getErrorFlags();
+	uint8_t irq_error = mcp2515.getErrorFlags();
 	//read EFLG
-	if ((irq & MCP2515::EFLG_RX0OVR) | (irq & MCP2515::EFLG_RX1OVR))
+	if ((irq_error & MCP2515::EFLG_RX0OVR) | (irq_error & MCP2515::EFLG_RX1OVR))
 	{
 		mcp2515_overflow = true;
 		mcp2515.clearRXnOVRFlags();
 	}
-	mcp2515.clearInterrupts();
+
+
+	//mcp2515.clearInterrupts();
+
 	interrupt = true; //notifyloop()
 }
 
 void loop()
 {
+	if (deuMerda)
+		Serial.println("DEU MERDA");
+
 	/*if (hubNode)
 	{*/
 	serialComm.readSerial();
@@ -195,7 +203,7 @@ void loop()
 	}
 
 	unsigned long timeNow = millis();
-	if(timeNow - timeLastSentFrequentData > 2000)
+	if (timeNow - timeLastSentFrequentData > 2000)
 	{
 		serialComm.sendPCDiscovery();
 
@@ -203,14 +211,19 @@ void loop()
 		//if hub node
 		sendFrequentData();
 		//TODO if not hub node send to the hub
-		
-		timeLastSentFrequentData = timeNow;	
+
+		timeLastSentFrequentData = timeNow;
 	}
 
 	mainFSM.loop();
+	// Serial.print(F("Main .-.-> ")); Serial.println(consensus.consensusState);
 	if (consensus.consensusState != 0)
 	{
+		Serial.print(F("Main .-.-> "));
+		Serial.println(consensus.consensusState);
 		consensus.consensus_main();
+		Serial.print(F("SAI DO COSEN MAIN COM "));
+		Serial.println(consensus.consensusState);
 	}
 }
 
@@ -223,14 +236,14 @@ bool checkAndPrintCommandError(uint8_t destination);
 void sendFrequentData()
 {
 	//Only sends the frequent data packet if there is a hubnode
-	if(hubNode != 0)
+	if (hubNode != 0)
 	{
 		float iluminance = 10.0f; //TODO replace with luminance
 		uint8_t pwm = 128;
 
 		SerialFrequentDataPacket frequentDataPacket(nodeId, iluminance, pwm);
 
-		if(hubNode == nodeId)
+		if (hubNode == nodeId)
 		{
 			//Envia pelo serial ao PC
 			frequentDataPacket.sendOnSerial();
