@@ -19,7 +19,7 @@ Command::Command(char cmd, uint8_t destination, float value)
 {
 	this->cmd = cmd;
 	this->destination = destination;
-	setValue(value);
+	setFloatValue(value);
 }
 
 Command::Command(uint8_t* buffer)
@@ -51,13 +51,13 @@ char Command::getType()
 {
 	return (int8_t)value;
 }
-void Command::setValue(float v)
+void Command::setFloatValue(float v)
 {
 	Convertion convertion;
 	convertion.valueFloat = v;
 	value = convertion.value32b;
 }
-float Command::getValue()
+float Command::getFloatValue()
 {
 	Convertion convertion;
 	convertion.value32b = value;

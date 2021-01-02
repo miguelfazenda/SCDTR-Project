@@ -116,6 +116,11 @@ void registerNewNode(uint8_t id)
 		uint8_t nodeId = nodesList[i];
 		nodeIndexOnGainMatrix[nodeId] = i;
 	}
+
+	if (nodeId == hubNode)
+	{
+		serialComm.sendListNodesToPC();
+	}
 }
 
 bool deuMerda = false;

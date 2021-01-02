@@ -105,7 +105,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     }
     else if (msgType == CAN_IS_HUB_NODE)
     {
-        Serial.print("Received CAN_IS_HUB_NODE from ");
+        Serial.print(F("Received CAN_IS_HUB_NODE from "));
         Serial.print(sender);
 
         //Changes the hubNode to be the one who sent the message
@@ -120,7 +120,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     }
     else if (msgType == CAN_NO_LONGER_IS_HUB_NODE)
     {
-        Serial.print("Received CAN_NO_LONGER_IS_HUB_NODE from ");
+        Serial.print(F("Received CAN_NO_LONGER_IS_HUB_NODE from "));
         Serial.print(sender);
 
         //Changes the hubNode to be 0
@@ -129,7 +129,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     }
     else if(msgType == CAN_COMMANDS_REQUEST)
     {
-        Serial.print("Received CAN_COMMANDS_REQUEST from ");
+        Serial.print(F("Received CAN_COMMANDS_REQUEST from "));
         Serial.print(sender);
 
         //Parses the command from the binary data on the can frame
@@ -137,31 +137,31 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 
         //Executes the command and gets the return value 
         uint32_t value = serialComm.executeCommand(command);
-
+        Serial.print(F("Execução comando = ")); Serial.println(value);
         //If this is a message request sent by the hub, respond
         sendCommandResponse(sender, value);
     }
     else if (msgType == CAN_COMMANDS_RESPONSE)
     {
         //If this is a message response sent to the hub, print it on the serial
-        Serial.print("Received CAN_COMMANDS_RESPONSE from ");
+        Serial.print(F("Received CAN_COMMANDS_RESPONSE from "));
         Serial.println(sender);
 
-        Convertion value;
-        value.valueBytes[0] = sendingFrame.data[0];
-        value.valueBytes[1] = sendingFrame.data[1];
-        value.valueBytes[2] = sendingFrame.data[2];
-        value.valueBytes[3] = sendingFrame.data[3];
+        Convertion convertion;
+        convertion.valueBytes[0] = frame->data[0];
+        convertion.valueBytes[1] = frame->data[1];
+        convertion.valueBytes[2] = frame->data[2];
+        convertion.valueBytes[3] = frame->data[3];
 
         //Sends the response on the serial port
-        serialComm.receivedCommandResponseFromCAN(sender, value.value32b);
+        serialComm.receivedCommandResponseFromCAN(sender, convertion.value32b);
 
         Serial.print(F("O Hub recebeu"));
-        Serial.print(value.value32b); Serial.print(F(" ; "));
-        Serial.print(value.valueBytes[0]); Serial.print(F(" ; "));
-        Serial.print(value.valueBytes[1]); Serial.print(F(" ; "));
-        Serial.print(value.valueBytes[2]); Serial.print(F(" ; "));
-        Serial.print(value.valueBytes[3]); Serial.println(F(" ; "));
+        Serial.print(convertion.value32b); Serial.print(F(" ; "));
+        Serial.print(frame->data[0]); Serial.print(F(" ; "));
+        Serial.print(frame->data[1]); Serial.print(F(" ; "));
+        Serial.print(frame->data[2]); Serial.print(F(" ; "));
+        Serial.print(frame->data[3]); Serial.println(F(" ; "));
     }
     else if (msgType == CAN_CONSENSUS)
     {
@@ -183,10 +183,14 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
         consensus.receivedMsg(dutyCyclesReceived);
         
     }
+    else if (msgType == CAN_DO_CONSENSUS)
+    {
+        consensus.init();
+    }
 }
 
 void Communication::sendCommandResponse(uint8_t sender, uint32_t value) {
-    Serial.print("[Comm] Sending CAN_COMMANDS_RESPONSE to ");
+    Serial.print(F("[Comm] Sending CAN_COMMANDS_RESPONSE to "));
     Serial.println(sender);
     sendingFrame.can_id = canMessageId(sender, CAN_COMMANDS_RESPONSE);
 
@@ -210,7 +214,7 @@ void Communication::sendCommandResponse(uint8_t sender, uint32_t value) {
 }
 
 void Communication::sendCommandRequest(uint8_t destination, Command& command) {
-    Serial.print("[Comm] Sending CAN_COMMANDS_REQUEST to ");
+    Serial.print(F("[Comm] Sending CAN_COMMANDS_REQUEST to "));
     Serial.println(destination);
 
     sendingFrame.can_id = canMessageId(destination, CAN_COMMANDS_REQUEST);
@@ -224,7 +228,7 @@ void Communication::sendCommandRequest(uint8_t destination, Command& command) {
 
 void Communication::sendBroadcastWakeup()
 {
-    Serial.println("[Comm] Sending CAN_WAKEUP_BROADCAST");
+    Serial.println(F("[Comm] Sending CAN_WAKEUP_BROADCAST"));
     sendingFrame.can_id = canMessageId(0, CAN_WAKEUP_BROADCAST);
     sendingFrame.can_dlc = 0;
     sendFrame();
@@ -259,7 +263,7 @@ void Communication::sendCalibReady(float val)
  */
 void Communication::sendFrequentDataToHub(SerialFrequentDataPacket frequentDataPacket)
 {
-    Serial.print("[Comm] Sending CAN_FREQUENT_DATA to hub id:");
+    Serial.print(F("[Comm] Sending CAN_FREQUENT_DATA to hub id:"));
     Serial.println(hubNode);
     //communication.writeFloat(canMessageId(0, CAN_CALIB_READY), val);
     sendingFrame.can_id = canMessageId(hubNode, CAN_FREQUENT_DATA);
@@ -267,6 +271,14 @@ void Communication::sendFrequentDataToHub(SerialFrequentDataPacket frequentDataP
     size_t numBytes = frequentDataPacket.toByteArray(sendingFrame.data);
     sendingFrame.can_dlc = numBytes;
 
+    sendFrame();
+}
+
+void Communication::sendDoConsensus()
+{
+    Serial.println(F("[Comm] Sending CAN_DO_CONSENSUS"));
+    sendingFrame.can_id = canMessageId(0, CAN_DO_CONSENSUS);
+    sendingFrame.can_dlc = 0;
     sendFrame();
 }
 
@@ -281,7 +293,7 @@ MCP2515::ERROR Communication::sendConsensusDutyCycle(float* val)
     float aux = 0.0;
     for (int i = 0; i < numTotalNodes; i++) //prepare can message
     { 
-        aux = round(val[i]*255.0/100.0);
+        aux = min(round(val[i]*255.0/100.0), 255.0);
         sendingFrame.data[i] = (uint8_t) abs(aux); //converting each value of the array to a byte
         signByte = signByte | (val[i] < 0) << i;
     }

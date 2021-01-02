@@ -11,11 +11,12 @@
 #define CAN_CALIB_READY 2
 #define CAN_CALIB_LED_ON 3
 #define CAN_CALIB_GAIN 4
-#define CAN_CONSENSUS 5
+#define CAN_DO_CONSENSUS 5
+#define CAN_CONSENSUS 6
 
 #define CAN_IS_HUB_NODE 10
 #define CAN_NO_LONGER_IS_HUB_NODE 11
-#define CAN_FREQUENT_DATA 11
+#define CAN_FREQUENT_DATA 12
 
 #define CAN_COMMANDS_REQUEST 8
 #define CAN_COMMANDS_RESPONSE 9
@@ -58,6 +59,7 @@ public:
     void sendCalibLedOn();
     void sendCalibReady(float val);
 
+    void Communication::sendDoConsensus();
     MCP2515::ERROR sendConsensusDutyCycle(float* val);
     void sendBroadcastIsHubNode();
     void sendBroadcastNoLongerIsHubNode();

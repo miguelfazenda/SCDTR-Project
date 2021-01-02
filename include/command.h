@@ -14,8 +14,8 @@ public:
 
     void setType(char t);
     char getType();
-    void setValue(float v);
-    float getValue();
+    void setFloatValue(float v);
+    float getFloatValue();
 
     int8_t cmd;  // Get (g), set(o, U, ..)
     uint8_t destination; //Destino

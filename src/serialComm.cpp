@@ -104,82 +104,86 @@ uint32_t SerialComm::executeCommand(Command command)
 	uint8_t nodeIdx = nodeIndexOnGainMatrix[nodeId];
 	if (command.cmd == 'g')
 	{
-		FloatTo4Bytes convert;
+		Convertion convert;
 		if (command.getType() == 'I')
 		{
 			float voltage = luminaire.getVoltage();
-			convert.floatValue = luminaire.voltageToLux(voltage);
+			convert.valueFloat = luminaire.voltageToLux(voltage);
 		}
 		else if (command.getType() == 'd')
 		{
-			convert.floatValue = luminaire.controller.u * 100.0 / 255.0;
+			convert.valueFloat = luminaire.controller.u * 100.0 / 255.0;
 		}
 		else if (command.getType() == 'o')
 		{
-			convert.value = (luminaire.occupied == false) ? 0 : 1;
+			convert.value32b = (luminaire.occupied == false) ? 0 : 1;
 		}
 		else if (command.getType() == 'O')
 		{
-			convert.floatValue = luminaire.luxOccupied;
+			convert.valueFloat = luminaire.luxOccupied;
 		}
 		else if (command.getType() == 'U')
 		{
-			convert.floatValue = luminaire.luxNonOccupied;
+			convert.valueFloat = luminaire.luxNonOccupied;
 		}
 		else if (command.getType() == 'L')
 		{
-			convert.floatValue = luminaire.luxRef;			
+			convert.valueFloat = luminaire.luxRef;			
 		}
 		else if (command.getType() == 'x')
 		{
-			convert.floatValue = calibrationFSM.residualArray[nodeIdx]; //falar com o michel para ser sempre o hub a mandar
+			convert.valueFloat = calibrationFSM.residualArray[nodeIdx]; 
 		}
 		else if (command.getType() == 'r')
 		{
-			convert.floatValue = luminaire.luxRefAfterConsensus;
+			convert.valueFloat = luminaire.luxRefAfterConsensus;
 		}
 		else if (command.getType() == 'c')
 		{
-			convert.floatValue = luminaire.cost;
+			convert.valueFloat = luminaire.cost;
 		}
-		convert.floatValue = 123.4567;
 
-		return convert.value;
+		return convert.value32b;
 	}
 	else if (command.cmd == 'O' || command.cmd == 'U' || command.cmd == 'c')
 	{
-		if (command.getType() == 'O')
+		if (command.cmd == 'O')
 		{
-			if (luminaire.luxOccupied != command.getValue())
+			if (luminaire.luxOccupied != command.getFloatValue())
 			{
-				luminaire.luxOccupied = command.getValue();
+				Serial.print(F("getFloatValue = ")); Serial.println(command.getFloatValue());
+				Serial.print(F("Value = ")); Serial.println(command.value);
+				luminaire.luxOccupied = command.getFloatValue();
 				//in case the node is occupied and we change it's refference we need to run consensus again
 				if (luminaire.occupied == true)
 				{
-					luminaire.luxRef = command.getValue();
-					consensus.consensusState = 1;
+					luminaire.luxRef = command.getFloatValue();
+					communication.sendDoConsensus();
+					consensus.init();
 				}
 			}
 		}
-		else if (command.getType() == 'U')
+		else if (command.cmd == 'U')
 		{
-			if (luminaire.luxNonOccupied != command.getValue())
+			if (luminaire.luxNonOccupied != command.getFloatValue())
 			{
-				luminaire.luxNonOccupied = command.getValue();
+				luminaire.luxNonOccupied = command.getFloatValue();
 				//in case the node is occupied and we change it's refference we need to run consensus again
 				if (luminaire.occupied == false)
 				{
-					luminaire.luxRef = command.getValue();
-					consensus.consensusState = 1;
+					luminaire.luxRef = command.getFloatValue();
+					communication.sendDoConsensus();
+					consensus.init();
 				}
 			}
 		}
-		else if (command.getType() == 'c')
+		else if (command.cmd == 'c')
 		{
-			if(luminaire.cost != command.getValue())
+			if(luminaire.cost != command.getFloatValue())
 			{
-				luminaire.cost = command.getValue();
-				consensus.consensusState = 1;
+				luminaire.cost = command.getFloatValue();
+				communication.sendDoConsensus();
+				consensus.init();
 				EEPROM.put(9, luminaire.cost);
 			}
 		}
@@ -188,11 +192,12 @@ uint32_t SerialComm::executeCommand(Command command)
 	else if (command.cmd == 'o')
 	{
 
-		bool RecievedOccupiedState = command.getValue() == 1 ? true : false;
+		bool RecievedOccupiedState = command.value == 1 ? true : false;
 		if (RecievedOccupiedState != luminaire.occupied)
 		{
 			luminaire.setOccupied(RecievedOccupiedState);
-			consensus.consensusState = 1;
+			communication.sendDoConsensus();
+			consensus.init();
 		}
 		/*Serial.print("SET RECEIVED  ");
 		Serial.print((char) command.cmd);

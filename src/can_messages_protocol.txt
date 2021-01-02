@@ -3,5 +3,6 @@ id  description                         data
 2   Calib Ready                         valor lido 
 3   Calib Led On                 
 4   Calib Gain                          ganho calculado
-5   Consensus data                      dutycycle
+5   Do Consensus                        
+6   Consensus data                      dutycycle
 10  Vai buscar o value a um node (CAN_RTR_FLAG caso seja request)   I, d ou outro
