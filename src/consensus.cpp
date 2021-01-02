@@ -6,23 +6,26 @@
 
 void Consensus::init()
 {
-    Serial.println(F("---- CONSENSUS INIT"));
+    // Serial.println(F("---- CONSENSUS INIT"));
     nodeIdx = nodeIndexOnGainMatrix[nodeId];
     consensusState = 1;
     numIter = 0;
+    numberOfMsgReceived = 0;
     //cost[nodeIdx] = luminaire.cost;
     ki = calibrationFSM.gainMatrix[nodeIdx];
+    kiNorm = 0;
     for (uint8_t i = 0; i < numTotalNodes; i++)
     {
         kiNorm += pow(ki[i], 2);
         dutyCycleBest[i] = 0.0;
         dutyCycleAv[i] = 0.0;
         lagrangeMultipliers[i] = 0.0;
+        receivedDutyCycle[i] = 0.0;
     }
 
     kinormKiiDiff = kiNorm - pow(ki[nodeIdx], 2);
-
     LiRef = luminaire.luxRef;
+     Serial.print(F("No init ref = ")); Serial.println(LiRef);
 }
 
 float Consensus::evaluate_cost(float *dutyClicleToCheck)
@@ -217,12 +220,12 @@ void Consensus::consensus_main()
     if (consensusState == 3)
     {
         Serial.print(F("numberOfMsgReceived -> ")); Serial.println(numberOfMsgReceived);
-        if (numberOfMsgReceived == numTotalNodes - 1) /Ou >= ?????
+        if (numberOfMsgReceived == numTotalNodes - 1) //Ou >= ?????
         {
             consensusState = 4;
         }
     }
-    Serial.print(F("Consensus -> ")); Serial.println(consensusState);
+    //Serial.print(F("Consensus -> ")); Serial.println(consensusState);
     if (consensusState == 4)
     {
         //Serial.println(F("---AVG----"));
@@ -252,9 +255,9 @@ void Consensus::consensus_main()
             
             //New lux reference, after consensus. dutyCycleBest is in %, we must convert it to 0-255 range and convert to lux
             float newLuxRef = (dutyCycleBest[nodeIdx]*255.0/100.0) * ki[nodeIdx] - calibrationFSM.residualArray[nodeIdx];
-           	Serial.print(F("No FINAL DO CONENSUS ----->"));
+           	Serial.print(F("No FINAL DO CONSENSUS ----->"));
         	Serial.println(newLuxRef);
-           luminaire.setLuxRefAfterConsensus(newLuxRef); //Change luxRefAfterConsensus and starts simulation
+            luminaire.setLuxRefAfterConsensus(newLuxRef); //Change luxRefAfterConsensus and starts simulation
         }
     }
 }
@@ -264,7 +267,7 @@ void Consensus::receivedMsg(float *receivedArray)
     for (uint8_t i = 0; i < numTotalNodes; i++)
     {
         receivedDutyCycle[i] += receivedArray[i];
-        Serial.println(receivedArray[i]);
+        //Serial.println(receivedArray[i]);
     }
     numberOfMsgReceived += 1;
 }

@@ -155,6 +155,13 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 
         //Sends the response on the serial port
         serialComm.receivedCommandResponseFromCAN(sender, value.value32b);
+
+        Serial.print(F("O Hub recebeu"));
+        Serial.print(value.value32b); Serial.print(F(" ; "));
+        Serial.print(value.valueBytes[0]); Serial.print(F(" ; "));
+        Serial.print(value.valueBytes[1]); Serial.print(F(" ; "));
+        Serial.print(value.valueBytes[2]); Serial.print(F(" ; "));
+        Serial.print(value.valueBytes[3]); Serial.println(F(" ; "));
     }
     else if (msgType == CAN_CONSENSUS)
     {
@@ -179,7 +186,7 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
 }
 
 void Communication::sendCommandResponse(uint8_t sender, uint32_t value) {
-    Serial.print("[Comm] Sending CAN_COMMANDS_REQUEST to ");
+    Serial.print("[Comm] Sending CAN_COMMANDS_RESPONSE to ");
     Serial.println(sender);
     sendingFrame.can_id = canMessageId(sender, CAN_COMMANDS_RESPONSE);
 
@@ -193,6 +200,12 @@ void Communication::sendCommandResponse(uint8_t sender, uint32_t value) {
     sendingFrame.data[2] = sendingValue.valueBytes[2];
     sendingFrame.data[3] = sendingValue.valueBytes[3];
     sendingFrame.can_dlc = 4;
+    Serial.print(F("O no respondeu ao Hub "));
+	Serial.print(value); Serial.print(F(" ; "));
+    Serial.print(sendingValue.valueBytes[0]); Serial.print(F(" ; "));
+    Serial.print(sendingValue.valueBytes[1]); Serial.print(F(" ; "));
+    Serial.print(sendingValue.valueBytes[2]); Serial.print(F(" ; "));
+    Serial.print(sendingValue.valueBytes[3]); Serial.println(F(" ; "));
     sendFrame();
 }
 

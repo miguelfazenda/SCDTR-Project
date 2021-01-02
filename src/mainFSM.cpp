@@ -88,7 +88,7 @@ void MainFSM::loop() {
             
             //Print gain matrix
             calibrationFSM.printResidualAndGainMatrix();
-            Serial.println(F("---- CHAMADO CONSENSUS INIT"));
+            // Serial.println(F("---- CHAMADO CONSENSUS INIT"));
             //Start consensus optimization
             consensus.init(); 
         }
