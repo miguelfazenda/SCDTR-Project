@@ -217,7 +217,7 @@ void Consensus::consensus_main()
     if (consensusState == 3)
     {
         Serial.print(F("numberOfMsgReceived -> ")); Serial.println(numberOfMsgReceived);
-        if (numberOfMsgReceived == numTotalNodes - 1) //Ou >= ?????
+        if (numberOfMsgReceived == numTotalNodes - 1) /Ou >= ?????
         {
             consensusState = 4;
         }
