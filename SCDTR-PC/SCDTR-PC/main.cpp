@@ -8,7 +8,7 @@
 #include <memory>
 //#include <unistd.h>
 
-#include "program.h"
+#include "Server.h"
 #include "commands.h"
 #include "Client.h"
 
@@ -50,16 +50,20 @@ int runServer(char* serialStr)
 {
     try
     {
-        std::shared_ptr<Program> program = std::make_shared<Program>(io_context);
+        std::shared_ptr<Server> program = std::make_shared<Server>(io_context);
         Commands::program = program;
 
         program->start(serialStr);
 
         thread thread1{ run_service };
         thread thread2{ run_service };
+        thread thread3{ run_service };
+        thread thread4{ run_service };
 
         thread1.join();
         thread2.join();
+        thread3.join();
+        thread4.join();
     }
     catch (std::exception& e)
     {

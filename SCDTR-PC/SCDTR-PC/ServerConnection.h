@@ -5,18 +5,20 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
-class Program;
+class Server;
 
 class ServerConnection : public std::enable_shared_from_this<ServerConnection>
 {
 public:
-	ServerConnection(boost::asio::io_context& io_context, std::weak_ptr<Program> server);
+	ServerConnection(boost::asio::io_context& io_context, std::weak_ptr<Server> server);
 	void start();
 	void sendMessage(std::string msg);
 
 	char streamingActive = 0;
 
-	std::weak_ptr<Program> server;
+	std::weak_ptr<Server> server;
+
+	char recevied[1024];
 
 
 	//std::shared_ptr<boost::asio::ip::tcp::socket> socket;

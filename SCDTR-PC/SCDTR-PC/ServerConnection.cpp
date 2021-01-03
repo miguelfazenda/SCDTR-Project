@@ -6,13 +6,13 @@
 #include <iostream>
 #include "commands.h"
 #include "command.h"
-#include "program.h"
+#include "Server.h"
 
 using namespace boost::asio;
 using boost::asio::ip::tcp;
 using namespace std;
 
-ServerConnection::ServerConnection(boost::asio::io_context& io_context, weak_ptr<Program> server)
+ServerConnection::ServerConnection(boost::asio::io_context& io_context, weak_ptr<Server> server)
 	: socket{ io_context } //Initializes the socket
 {
 	this->server = server;
@@ -37,20 +37,21 @@ void ServerConnection::sendMessage(std::string msg)
 }
 
 
-char dataaa2[1024];
-
 //Reads the next data
 void ServerConnection::start_receive_read()
 {
-	socket.async_read_some(boost::asio::buffer(dataaa2, 1024),
+	socket.async_read_some(boost::asio::buffer(recevied, 1024),
 		[this](const boost::system::error_code& err, std::size_t len)
 	{
 		if (err)
+		{
+			//TODO remover o cliente
 			std::cout << "Erro TODO QUE FALTA IMPLEMETAR " << std::endl;
+		}
 
 		if (len > 0)
 		{
-			std::string line(dataaa2);
+			std::string line(recevied);
 			
 			//Writes the command response here if it's to then be redirected to the client
 			std::ostringstream textOutputForClient;

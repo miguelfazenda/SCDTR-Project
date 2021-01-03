@@ -26,13 +26,13 @@ Command::Command(uint8_t* buffer)
 {
 	this->destination = buffer[0];
 	this->cmd = buffer[1];
-	this->value = int((uint32_t)(buffer[2]) << 24 |
+	this->value = (uint32_t)(buffer[2]) << 24 |
 		(uint32_t)(buffer[3]) << 16 |
 		(uint32_t)(buffer[4]) << 8 |
-		(uint32_t)(buffer[5]));
+		(uint32_t)(buffer[5]);
 }
 
-size_t Command::toByteArray(char* array)
+size_t Command::toByteArray(uint8_t* array)
 {
 	array[0] = destination;
 	array[1] = cmd;

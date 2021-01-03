@@ -11,7 +11,7 @@ public:
     Command(char cmd, uint8_t destination, float value);
 
     Command(uint8_t* buffer);
-    size_t toByteArray(char* array);
+    size_t toByteArray(uint8_t* array);
 
     void setType(char t);
     char getType();

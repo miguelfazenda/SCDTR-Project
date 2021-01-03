@@ -7,13 +7,16 @@
 #include <utility>
 #include <map>
 #include <queue>
+#include <mutex>
 #include "command.h"
 #include "ServerConnection.h"
+#include "LastMinuteBuffer.h"
+
 
 #define TCP_PORT 8082
 using namespace std;
 
-class Program : public std::enable_shared_from_this<Program>
+class Server : public std::enable_shared_from_this<Server>
 {
 private:
     void commandTimedOut(const boost::system::error_code& e);
@@ -21,11 +24,13 @@ private:
     void start_read_console();
     void tcp_start_accept();
 
+    std::mutex mtxClientSessions;
     std::vector<std::shared_ptr<ServerConnection>> clientSessions;
 
 
     boost::asio::io_context& io_context;
     boost::asio::ip::tcp::acceptor acceptor;
+    boost::asio::ip::udp::socket udpSocket;
 
     //Command timeout timer, that every 3 seconds checks if a command had no response
     unique_ptr<boost::asio::steady_timer> timerCommandTimeout;
@@ -39,24 +44,16 @@ private:
     boost::asio::streambuf console_stm_buff{ 1024 };
 
     //std::shared_ptr<ServerConnection> newSession;
-
-
 public:
-    Program(boost::asio::io_context& io_context);
+    Server(boost::asio::io_context& io_context);
 
     void start(const char* serialStr);
-
-    void run_service();
 
     void writeToSerialPort(boost::asio::mutable_buffer buf);
     void start_read_serial();
     void handle_read_serial(const boost::system::error_code &err, size_t len);
 
     void receivedFrequentData(uint8_t nodeId, uint8_t pwm, float iluminance);
-
-    void addToLastMinuteBuffer(uint8_t nodeId, uint8_t pwm, float iluminance);
-    void removeOldLastMinuteBufferEntries();
-    void printLastMinuteBuffer(const uint8_t nodeId, const bool pwm, std::ostream* textOutputStream);
 
     void addCommandToQueue(Command command, shared_ptr<ServerConnection> client);
     void executeNextInCommandQueue();
@@ -66,21 +63,29 @@ public:
      */
     void receivedCommandResponse(uint32_t value);
 
+    void removeClientSession(shared_ptr<ServerConnection> client);
+
     //If it's detected the serial hasn't read enough, the unfinished part is stored in this string
     //  so that it's used the next time data arrives
+    //Doesn't need mutex because it is only used in handle_read_serial,
+    //  and that function is only ran once at a time
     string unfinishedSerialString;
 
+    std::mutex mtxNodeIds;
     vector<int> nodeIds;
 
     //Map: nodeId, vector
     //Vector: buffer containing pairs of <time, reading>
     //Reading: pair containing pwm(uint8_t) and iluminance(float)
-    map<uint8_t, vector<pair<unsigned long, pair<uint8_t, float>>>> lastMinuteBuffer;
-
+    //map<uint8_t, vector<pair<unsigned long, pair<uint8_t, float>>>> lastMinuteBuffer;
+    std::mutex mtxCommandsQueue;
     queue<CommandQueueElement> commandsQueue;
+
+    LastMinuteBuffer lastMinuteBuffer2;
 
     //Streaming active to the server console
     //char -> '\0' not streaming, 'I' streaming variable I, 'd' streaming d
+    std::mutex mtxStreamingActive;
     char streamingActive = 0;
     
     // pair<clientSession, char> - clientSession can be nullptr to indicate streaming to the server console
@@ -88,6 +93,7 @@ public:
 
     boost::asio::serial_port serial_port;
     boost::asio::streambuf serial_stm_buff{ 1024 };
+
 };
 
 #endif

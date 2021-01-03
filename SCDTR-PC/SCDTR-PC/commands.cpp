@@ -5,10 +5,10 @@
 #include <boost/enable_shared_from_this.hpp>
 
 #include "input_exception.h"
-#include "program.h"
+#include "Server.h"
 #include "command.h"
 
-std::shared_ptr<Program> Commands::program;
+std::shared_ptr<Server> Commands::program;
 
 uint8_t Commands::commandGetDestination(const std::string & substring)
 {
@@ -28,10 +28,13 @@ uint8_t Commands::commandGetDestination(const std::string & substring)
     }
 
     //searches the nodeIds vector to see if this destination is present there
+    program->mtxNodeIds.lock();
     if (std::find(program->nodeIds.begin(), program->nodeIds.end(), destination) == program->nodeIds.end())
     {
+        program->mtxNodeIds.unlock();
         throw input_exception("Destination ID " + to_string(destination) + " not present");
     }
+    program->mtxNodeIds.unlock();
 
     return destination;
 }
@@ -42,7 +45,7 @@ uint8_t Commands::commandGetDestination(const std::string & substring)
  */
 uint8_t Commands::checkGetArguments(std::string *data)
 {
-    std::string arguments = "IdoOULxRcptevf"; //string that has every char thats corresponds to
+    std::string arguments = "IdoOULxRrcptevf"; //string that has every char thats corresponds to
                                               //one argument of comands type get
     std::string argumentsWithT = "pevf";      //string that has every char thats corresponds to
                                               //one argument of comands type get that allows the last argument to be 'T'
@@ -171,18 +174,11 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
     if (line.length() > 2 && line[1] == ' ')
     {
         uint8_t destination;
-        
-        uint8_t serialOutput[10];
-        //If we send a serial message, it must start with syncronization byte
-        serialOutput[0] = 255;
 
         try
         {
             if (line[0] == 'g')
             {
-                //command type get
-                *textOutputStream << "get!" << std::endl;
-
                 destination = checkGetArguments(&line);
                 /*std::cout << line[2] << " "
                             << "Destination: " << destination << std::endl;*/
@@ -210,15 +206,22 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
 
                 command = Command((char)line[0], destination, (char)boolValue);
             }
+            else if (line[0] == 'r')
+            {
+                destination = checkGetArguments(&line);
+                /*std::cout << line[2] << " "
+                            << "Destination: " << destination << std::endl;*/
+                command = Command((char)line[0], destination, '\0');
+            }
             else if(line[0] == 'b')
             {
                 destination = checkGetArguments(&line);
                 
                 //command = Command((char)line[0], destination, (char)line[2]);
                 if(line[2] == 'I')
-                    program->printLastMinuteBuffer(destination, false, textOutputStream);
+                    program->lastMinuteBuffer2.printLastMinuteBuffer(destination, false, textOutputStream);
                 else if(line[2] == 'd')
-                    program->printLastMinuteBuffer(destination, true, textOutputStream);
+                    program->lastMinuteBuffer2.printLastMinuteBuffer(destination, true, textOutputStream);
                 else
                     *textOutputStream << "Must be buffer 'I' or 'd': " << line << std::endl;
             }
@@ -226,6 +229,9 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
             {
                 destination = checkGetArguments(&line);
 
+                //Locks mutex for the streaming active
+                std::lock_guard<std::mutex> lockMtxStreamingActive(program->mtxStreamingActive);
+                
                 //Weather it's the server that sent the command or a client
                 bool server = (clientSession.get() == nullptr);
 
