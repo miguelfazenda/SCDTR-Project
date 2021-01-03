@@ -33,3 +33,10 @@ float LPF::value()
 	lpfAvgVal /= lpfNumSamples;
 	return lpfAvgVal;
 }
+
+void  LPF::resetLPF()
+{
+	lpfNumSamples = 0;
+    lpfIdx = 0;
+    lpfSamples[LPF_TOTAL_SAMPLES] = {0};
+}

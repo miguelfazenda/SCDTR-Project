@@ -123,6 +123,17 @@ void registerNewNode(uint8_t id)
 	}
 }
 
+void resetGlob()
+{
+	for (uint8_t i = 0; i < numTotalNodes; i++)
+	{
+		nodeIndexOnGainMatrix[nodesList[i]]=0;
+		nodesList[i]=0;
+	}
+	numTotalNodes=0;
+	
+}
+
 void irqHandler()
 {
 	can_frame frm;

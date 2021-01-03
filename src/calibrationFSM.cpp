@@ -265,3 +265,26 @@ void CalibrationFSM::printResidualAndGainMatrix() {
         }
     }
 }
+
+void CalibrationFSM::resetCalib()
+{
+    state = CalibrationState::CalibInit;
+    numNodesReady = 0;
+    luxReadNum = 0; //number of the Lux read
+    //PWM values
+    pwm[0] = 20;
+    pwm[1] = 240;
+    luxReads[0] = 0;
+    luxReads[1] = 0;
+    otherNodeLedOn = false;
+    done = false;
+    for (uint8_t i = 0; i < numTotalNodes; i++)
+    {
+        for (uint8_t j = 0; j < numTotalNodes; j++)
+        {
+            gainMatrix[i][j] = 0;
+        }
+        residualArray[i] = 0;
+    }
+    
+}

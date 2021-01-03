@@ -18,6 +18,7 @@ public:
 
     void runStateInit(unsigned long timeSinceLastTransition);
     void runStateWakeupWait(unsigned long timeSinceLastTransition);
+    void resetMainFSM();
 };
 
 #endif

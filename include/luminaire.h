@@ -44,6 +44,8 @@ public:
     float voltageToLux(float voltage);
 
     float getVoltage();
+
+    void resetLuminaire();
 };
 
 #endif
