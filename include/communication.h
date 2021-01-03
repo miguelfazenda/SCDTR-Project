@@ -59,8 +59,8 @@ public:
     void sendCalibLedOn();
     void sendCalibReady(float val);
 
-    void Communication::sendDoConsensus();
-    MCP2515::ERROR sendConsensusDutyCycle(float* val);
+    void sendDoConsensus();
+    void sendConsensusDutyCycle(float* val);
     void sendBroadcastIsHubNode();
     void sendBroadcastNoLongerIsHubNode();
 

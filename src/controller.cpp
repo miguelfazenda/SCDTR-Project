@@ -8,7 +8,7 @@
 Controller::Controller()
 {
 	ui = 0.0f;
-	u=0;
+	u=0.0;
 }
 
 int Controller::calc(float errorVoltage, unsigned long samplingTime, float luxRef, float systemGain, float residualRead) {

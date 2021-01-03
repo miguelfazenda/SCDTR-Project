@@ -123,22 +123,15 @@ void registerNewNode(uint8_t id)
 	}
 }
 
-bool deuMerda = false;
-
 void irqHandler()
 {
-	bool used_RX0 = false;
-	bool used_RX1 = false;
 	can_frame frm;
 	uint8_t irq = mcp2515.getInterrupts();
 	//check messages in buffer 0
 	
 	if (irq & MCP2515::CANINTF_RX0IF)
 	{
-		used_RX0 = true;
 		mcp2515.readMessage(MCP2515::RXB0, &frm);
-		/*Serial.print("BF0 ");
-		Serial.print(frm.can_id);*/
 		if (!cf_stream.put(frm)) //no space
 			arduino_overflow = true;
 	}
@@ -146,10 +139,7 @@ void irqHandler()
 	irq = mcp2515.getInterrupts();
 	if (irq & MCP2515::CANINTF_RX1IF)
 	{
-		used_RX1 = true;
 		mcp2515.readMessage(MCP2515::RXB1, &frm);
-		/*Serial.print("BF1 ");
-		Serial.print(frm.can_id);*/
 		if (!cf_stream.put(frm)) //no space
 			arduino_overflow = true;
 	}
@@ -169,13 +159,8 @@ void irqHandler()
 
 void loop()
 {
-	if (deuMerda)
-		Serial.println("DEU MERDA");
-
-	/*if (hubNode)
-	{*/
 	serialComm.readSerial();
-	//}
+
 	if (interrupt)
 	{
 		interrupt = false;

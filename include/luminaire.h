@@ -26,8 +26,8 @@ public:
     Controller controller;
     //TODO ver se o professor prefere que crie um getter
     bool occupied = false;
-    int luxRef;
-    int luxRefAfterConsensus;
+    float luxRef;
+    float luxRefAfterConsensus;
     float luxOccupied = 100.0;
     float luxNonOccupied = 30.0;
     float cost;
@@ -36,11 +36,11 @@ public:
     void init(bool occupied);
     void loop();
 
-    void setLuxRefAfterConsensus(int lux);
+    void setLuxRefAfterConsensus(float lux);
     void setOccupied(bool o);
     void setSystemGain(float Kii);
 
-    float luxToVoltage(int lux);
+    float luxToVoltage(float lux);
     float voltageToLux(float voltage);
 
     float getVoltage();

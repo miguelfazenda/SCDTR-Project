@@ -118,7 +118,7 @@ void Luminaire::control(unsigned long timeNow, unsigned long samplingTime)
 /**
  * Sets the lux reference, and starts a step on the simulator 
  */
-void Luminaire::setLuxRefAfterConsensus(int lux)
+void Luminaire::setLuxRefAfterConsensus(float lux)
 {
 	luxRefAfterConsensus = lux;
 	simulator.startStep(getVoltage(), luxToVoltage(luxRefAfterConsensus));
@@ -146,7 +146,7 @@ void Luminaire::setSystemGain(float Kii)
 }
 
 
-float Luminaire::luxToVoltage(int lux) {
+float Luminaire::luxToVoltage(float lux) {
 	float rLDR = pow(10, ldrSlopeM*log10(lux)+ldrSlopeB);
 	return 5 * R1_val / (R1_val + rLDR);
 }

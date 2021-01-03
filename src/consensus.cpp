@@ -7,15 +7,24 @@
 void Consensus::init()
 {
     // Serial.println(F("---- CONSENSUS INIT"));
+    
+    //Number of messages sent by each node * number of nodes
+    //Each message can send 3 values of the dutyCycle vector
+    numberOfMsgExpected = ((numTotalNodes - 1)/3 + 1) * (numTotalNodes-1);
+
     nodeIdx = nodeIndexOnGainMatrix[nodeId];
     consensusState = 1;
     numIter = 0;
     numberOfMsgReceived = 0;
     //cost[nodeIdx] = luminaire.cost;
-    ki = calibrationFSM.gainMatrix[nodeIdx];
+    //ki = calibrationFSM.gainMatrix[nodeIdx];
+    
     kiNorm = 0;
     for (uint8_t i = 0; i < numTotalNodes; i++)
     {
+        //Changes gain values to %
+        ki[i] = calibrationFSM.gainMatrix[nodeIdx][i]*255.0/100.0; 
+
         kiNorm += pow(ki[i], 2);
         dutyCycleBest[i] = 0.0;
         dutyCycleAv[i] = 0.0;
@@ -220,7 +229,7 @@ void Consensus::consensus_main()
     if (consensusState == 3)
     {
         Serial.print(F("numberOfMsgReceived -> ")); Serial.println(numberOfMsgReceived);
-        if (numberOfMsgReceived == numTotalNodes - 1) //Ou >= ?????
+        if (numberOfMsgReceived == numberOfMsgExpected) //Ou >= ?????
         {
             consensusState = 4;
         }
@@ -254,23 +263,31 @@ void Consensus::consensus_main()
             Serial.println(dutyCycleBest[2]);
             
             //New lux reference, after consensus. dutyCycleBest is in %, we must convert it to 0-255 range and convert to lux
-            float newLuxRef = (dutyCycleBest[nodeIdx]*255.0/100.0) * ki[nodeIdx] - calibrationFSM.residualArray[nodeIdx];
-           	Serial.print(F("No FINAL DO CONSENSUS ----->"));
+            //float newLuxRef = (dutyCycleBest[nodeIdx]*255.0/100.0) * ki[nodeIdx] - calibrationFSM.residualArray[nodeIdx];
+            float newLuxRef = 0.0;
+            Serial.println(F("---- MULti ------"));
+            for(uint8_t i = 0; i < numTotalNodes; i++)
+            {
+                Serial.print(dutyCycleBest[i]);Serial.print(" * ");Serial.println(ki[i]);
+                newLuxRef += (dutyCycleBest[i]) * ki[i];
+            }
+            newLuxRef -= calibrationFSM.residualArray[nodeIdx];
+            Serial.print(F("No FINAL DO CONSENSUS ----->"));
         	Serial.println(newLuxRef);
             luminaire.setLuxRefAfterConsensus(newLuxRef); //Change luxRefAfterConsensus and starts simulation
         }
     }
 }
 
-void Consensus::receivedMsg(float *receivedArray)
-{
-    for (uint8_t i = 0; i < numTotalNodes; i++)
-    {
-        receivedDutyCycle[i] += receivedArray[i];
-        //Serial.println(receivedArray[i]);
-    }
-    numberOfMsgReceived += 1;
-}
+// void Consensus::receivedMsg(float *receivedArray)
+// {
+//     for (uint8_t i = 0; i < numTotalNodes; i++)
+//     {
+//         receivedDutyCycle[i] += receivedArray[i];
+//         //Serial.println(receivedArray[i]);
+//     }
+//     numberOfMsgReceived += 1;
+// }
 
 float Consensus::multiplyTwoArrays(float *array1, float *array2, uint8_t dimention)
 {
@@ -290,9 +307,9 @@ void Consensus::resetConsensus()
         lagrangeMultipliers[i] = 0.0;
         receivedDutyCycle[i] = 0.0;
         dutyCycleBest[i] = 0.0;
+        ki[i] = 0;
     }
 
-    ki = nullptr;
     kiNorm = 0;
     kinormKiiDiff = 0;
     LiRef = 0;

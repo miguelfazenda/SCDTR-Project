@@ -101,7 +101,6 @@ void SerialComm::readSerial()
  */
 uint32_t SerialComm::executeCommand(Command command)
 {
-	uint8_t nodeIdx = nodeIndexOnGainMatrix[nodeId];
 	if (command.cmd == 'g')
 	{
 		Convertion convert;
@@ -112,7 +111,7 @@ uint32_t SerialComm::executeCommand(Command command)
 		}
 		else if (command.getType() == 'd')
 		{
-			convert.valueFloat = luminaire.controller.u * 100.0 / 255.0;
+			convert.valueFloat = luminaire.controller.u* 100.0 / 255.0;
 		}
 		else if (command.getType() == 'o')
 		{
@@ -132,6 +131,7 @@ uint32_t SerialComm::executeCommand(Command command)
 		}
 		else if (command.getType() == 'x')
 		{
+			uint8_t nodeIdx = nodeIndexOnGainMatrix[nodeId];
 			convert.valueFloat = calibrationFSM.residualArray[nodeIdx]; 
 		}
 		else if (command.getType() == 'r')
@@ -147,12 +147,12 @@ uint32_t SerialComm::executeCommand(Command command)
 	}
 	else if (command.cmd == 'O' || command.cmd == 'U' || command.cmd == 'c')
 	{
+		Serial.print(F("Value = ")); Serial.println(command.value);
+		Serial.print(F("getFloatValue = ")); Serial.println(command.getFloatValue());
 		if (command.cmd == 'O')
 		{
 			if (luminaire.luxOccupied != command.getFloatValue())
 			{
-				Serial.print(F("getFloatValue = ")); Serial.println(command.getFloatValue());
-				Serial.print(F("Value = ")); Serial.println(command.value);
 				luminaire.luxOccupied = command.getFloatValue();
 				//in case the node is occupied and we change it's refference we need to run consensus again
 				if (luminaire.occupied == true)
