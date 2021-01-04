@@ -52,10 +52,11 @@ public:
 
     LastMinuteBuffer lastMinuteBuffer2;
 
-    //Streaming active to the server console
-    //char -> '\0' not streaming, 'I' streaming variable I, 'd' streaming d
+
     std::mutex mtxStreamingActive;
-    char streamingActive = 0;
+    //Map - Key: nodeId, Value: a list of active streams (pairs of char and pointer to client session)
+    //  The char can be 'I' or 'd' for iluminance and duty-cycle, the pointer can be null to indicate streaming to the server console
+    std::map<int, std::map<shared_ptr<ServerConnection>, std::pair<bool, bool>>> activeStreams;
 private:
 	void commandTimedOut(const boost::system::error_code& e);
 

@@ -18,6 +18,8 @@
 #define EEPROM_ADDR_NODEID 8 //Address of where to get the can id of this arduino on the EEPROM
 #define EEPROM_ADDR_COST 9 //(até 13)Address of where to get the luminair cost of this arduino on the EEPROM
 
+#define CONTROL_DELAY 10000						//100 Hz corresponds to 1/100 s = 10000us
+
 //The CAN id of this arduino (uint8_t is one byte)
 extern uint8_t nodeId;
 extern uint8_t nodesList[MAX_NUM_NODES];
@@ -26,7 +28,9 @@ extern uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1];
 extern uint8_t numTotalNodes;
 //Which node is the hub node (0 for none)
 extern uint8_t hubNode;
-extern unsigned long timSinceLastReset;
+extern unsigned long timeSinceLastReset;
+//This is set to true when it's time to do the control (and send frequent data)
+extern bool didControl;
 
 //extern unsigned int lastResetTime; //time since last restart
 

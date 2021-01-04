@@ -350,12 +350,14 @@ void Server::removeClientSession(shared_ptr<ServerConnection> client)
     mtxClientSessions.unlock();
 }
 
-void streamValue(char streamingActive, std::ostream& textOutputStream, uint8_t pwm, float iluminance)
+void streamPWM(std::ostream& textOutputStream, uint8_t pwm)
 {
-    if (streamingActive == 'd')
-        textOutputStream << time(0) << " " << pwm * 100 / 255 << "%" << endl;
-    else if (streamingActive == 'I')
-        textOutputStream << time(0) << " " << iluminance << endl;
+    textOutputStream << time(0) << " " << pwm * 100 / 255 << "%" << endl;
+}
+
+void streamIluminance(std::ostream& textOutputStream, float iluminance)
+{
+    textOutputStream << time(0) << " " << iluminance << endl;
 }
 
 /*
@@ -369,17 +371,37 @@ void Server::receivedFrequentData(uint8_t nodeId, uint8_t pwm, float iluminance)
     std::lock_guard<std::mutex> lockMtxStreamingActive(mtxStreamingActive);
 
     //If the streaming mode is active in the server, print it to cout
-    if (streamingActive != 0)
-        streamValue(streamingActive, cout, pwm, iluminance);
+    
+    auto activeStreamsAboutThisNode = activeStreams[nodeId];
 
     mtxClientSessions.lock();
-    for (auto clientSession : clientSessions)
+    for (auto clientActiveStreams : activeStreamsAboutThisNode)
     {
-        if (clientSession->streamingActive != 0)
+        auto clientSession = clientActiveStreams.first;
+        //clientSession nullptr means it's a stream to the server console
+        bool isServer = clientSession.get() == nullptr;
+
+        bool streamingPWM = clientActiveStreams.second.first;
+        bool streamingIluminance = clientActiveStreams.second.second;
+
+        if (isServer)
+        {
+            //Stream the value to std::cout
+            if (streamingPWM)
+                streamPWM(cout, pwm);
+            if (streamingIluminance)
+                streamIluminance(cout, iluminance);
+        }
+        else
         {
             std::ostringstream textOutputForClient;
-            //If the streaming mode is active in the client, print it to the buffer textOutputForClient
-            streamValue(clientSession->streamingActive, textOutputForClient, pwm, iluminance);
+
+            //The streaming mode is active in the client, print it to the buffer textOutputForClient
+            if (streamingPWM)
+                streamPWM(cout, pwm);
+            if (streamingIluminance)
+                streamIluminance(cout, iluminance);
+
             //Sends the text in the buffer
             clientSession->sendMessage(textOutputForClient.str());
         }

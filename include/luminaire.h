@@ -32,6 +32,8 @@ public:
     float luxNonOccupied = 30.0;
     float cost;
 
+    float measuredVoltage;
+
 
     void init(bool occupied);
     void loop();

@@ -142,6 +142,10 @@ uint32_t SerialComm::executeCommand(Command command)
 		{
 			convert.valueFloat = luminaire.cost;
 		}
+		else if (command.getType() == 't')
+		{
+			convert.valueFloat = (millis() - timeSinceLastReset)/1000;
+		}
 
 		return convert.value32b;
 	}
@@ -190,17 +194,18 @@ uint32_t SerialComm::executeCommand(Command command)
 			}
 		}
 		return 1;
-		else if (command.cmd == 'r')
-		{
-			calibrationFSM.resetCalib();
-			consensus.resetConsensus();
-			lpf.resetLPF();
-			luminaire.resetLuminaire();
-			mainFSM.resetMainFSM();
-			resetGlob();
-			resetSerialComm();
-			timeSinceLastReset= millis();
-		}
+	}
+	else if (command.cmd == 'r')
+	{
+		calibrationFSM.resetCalib();
+		consensus.resetConsensus();
+		lpf.resetLPF();
+		luminaire.resetLuminaire();
+		mainFSM.resetMainFSM();
+		resetGlob();
+		resetSerialComm();
+		timeSinceLastReset = millis();
+		return 1;
 	}
 	else if (command.cmd == 'o')
 	{
@@ -321,10 +326,9 @@ void SerialComm::sendListNodesToPC()
 
 void SerialComm::resetSerialComm()
 {
-	uint8_t numNodesWaitingResult = 0;
+	numNodesWaitingResult = 0;
 
-    bool runningTotalCommand = false;
+    runningTotalCommand = false;
 
-    float totalCommandResult=0.0;
-
+    totalCommandResult = 0.0;
 }

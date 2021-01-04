@@ -14,7 +14,7 @@ public:
 	void start();
 	void sendMessage(std::string msg);
 
-	char streamingActive = 0;
+	//char streamingActive = 0;
 
 	std::weak_ptr<Server> server;
 

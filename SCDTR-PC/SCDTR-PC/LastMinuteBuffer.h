@@ -16,7 +16,9 @@ public:
     //Map: nodeId, vector
     //Vector: buffer containing pairs of <time, reading>
     //Reading: pair containing pwm(uint8_t) and iluminance(float)
-    std::map<uint8_t, std::vector<std::pair<unsigned long, std::pair<uint8_t, float>>>> lastMinuteBuffer;
+    //std::map<uint8_t, std::vector<std::pair<unsigned long, std::pair<uint8_t, float>>>> lastMinuteBuffer;
+
+    std::map<uint8_t, std::map<time_t, std::vector<std::pair<uint8_t, float>>>> lastMinuteBuffer;
 private:
     std::mutex mtx;
 };

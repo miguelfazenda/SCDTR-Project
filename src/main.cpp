@@ -12,6 +12,8 @@ uint8_t nodesList[MAX_NUM_NODES] = {0};
 uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID + 1] = {0};
 uint8_t numTotalNodes;
 uint8_t hubNode = 0;
+unsigned long timeSinceLastReset = 0;
+bool didControl = false;
 
 Communication communication;
 Luminaire luminaire;
@@ -208,16 +210,18 @@ void loop()
 	{
 		serialComm.sendPCDiscovery();
 
-		//Send frequent data
-		//if hub node
-		sendFrequentData();
-		//TODO if not hub node send to the hub
-
+		if(hubNode != 0)
+			sendFrequentData();
 		timeLastSentFrequentData = timeNow;
 	}
 
 	mainFSM.loop();
-	// Serial.print(F("Main .-.-> ")); Serial.println(consensus.consensusState);
+	
+	if(didControl)
+		if(hubNode != 0)
+			sendFrequentData();
+
+
 	if (consensus.consensusState != 0)
 	{
 		Serial.print(F("Main .-.-> "));
@@ -226,6 +230,9 @@ void loop()
 		Serial.print(F("SAI DO COSEN MAIN COM "));
 		Serial.println(consensus.consensusState);
 	}
+
+	if(didControl)
+		didControl = false;
 }
 
 int checkGetArguments(String data, int *flagT);
@@ -239,8 +246,8 @@ void sendFrequentData()
 	//Only sends the frequent data packet if there is a hubnode
 	if (hubNode != 0)
 	{
-		float iluminance = 10.0f; //TODO replace with luminance
-		uint8_t pwm = 128;
+		float iluminance = luminaire.voltageToLux(luminaire.measuredVoltage); //TODO replace with luminance
+		uint8_t pwm = luminaire.controller.u;
 
 		SerialFrequentDataPacket frequentDataPacket(nodeId, iluminance, pwm);
 

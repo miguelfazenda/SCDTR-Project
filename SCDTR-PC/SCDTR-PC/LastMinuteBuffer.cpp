@@ -11,7 +11,9 @@ void LastMinuteBuffer::addToLastMinuteBuffer(uint8_t nodeId, uint8_t pwm, float 
 
     //Note: buffer[nodeId] automatically inserts a new entry if key "nodeId" doesnt exist yet
     mtx.lock();
-    lastMinuteBuffer[nodeId].push_back(make_pair((unsigned long)timeNow, make_pair(pwm, iluminance)));
+    //std::map<unsigned long, std::pair<uint8_t, float>> a = lastMinuteBuffer[nodeId];
+
+    lastMinuteBuffer[nodeId][timeNow].push_back(make_pair(pwm, iluminance));
     mtx.unlock();
 }
 
@@ -21,20 +23,23 @@ void LastMinuteBuffer::addToLastMinuteBuffer(uint8_t nodeId, uint8_t pwm, float 
 void LastMinuteBuffer::removeOldLastMinuteBufferEntries()
 {
     mtx.lock();
-    unsigned long timeThreshold = (unsigned long)time(0) - 60;
+
+    time_t timeNow = time(0);
+
+    time_t timeThreshold = timeNow - 60;
 
     for (auto nodeBufferKeyValue : lastMinuteBuffer)
     {
         //For each pair nodeId,Buffer
-        auto nodeBuffer = nodeBufferKeyValue.second;
+        auto nodeBuffer = &nodeBufferKeyValue.second;
 
         //Find where an entry's time is older than 1 minute ago and erase
-        auto item = begin(nodeBuffer);
-        while (item != end(nodeBuffer))
+        auto item = begin(*nodeBuffer);
+        while (item != end(*nodeBuffer))
         {
             if (item->first < timeThreshold)
             {
-                item = nodeBuffer.erase(item);
+                item = nodeBuffer->erase(item);
             }
             else
             {
@@ -62,6 +67,7 @@ void LastMinuteBuffer::printLastMinuteBuffer(const uint8_t nodeId, const bool pw
     mtx.lock();
     if (lastMinuteBuffer.find(nodeId) == lastMinuteBuffer.end())
     {
+        mtx.unlock();
         //Has no data for such nodeId
         return;
     }
@@ -69,25 +75,29 @@ void LastMinuteBuffer::printLastMinuteBuffer(const uint8_t nodeId, const bool pw
     auto nodeBuffer = lastMinuteBuffer[nodeId];
 
     //Get last element pointer
-    auto lastElement = nodeBuffer.size() > 0 ? &nodeBuffer.back() : nullptr;
+    //auto lastElement = nodeBuffer.size() > 0 ? &nodeBuffer.back() : nullptr;
 
-    for (auto entry = nodeBuffer.begin(); entry != nodeBuffer.end(); ++entry)
+    for (auto bufForATime = nodeBuffer.begin(); bufForATime != nodeBuffer.end(); ++bufForATime)
     {
-        if (pwm)
+        //Each loop represents a different time
+        for (auto entry = bufForATime->second.begin(); entry != bufForATime->second.end(); ++entry)
         {
-            *textOutputStream << entry->second.first * 100 / 255 << "%";
-        }
-        else
-        {
-            *textOutputStream << entry->second.second;
-        }
+            if (pwm)
+            {
+                *textOutputStream << entry->first * 100 / 255 << "%";
+            }
+            else
+            {
+                *textOutputStream << entry->second;
+            }
 
 
-        //If it's the last element dont print the comma ','
-        if (&(*entry) == lastElement)
-            *textOutputStream << endl;
-        else
+            //If it's the last element dont print the comma ','
+            /*if (&(*entry) == lastElement)
+                *textOutputStream << endl;
+            else*/
             *textOutputStream << "," << endl;
+        }
     }
     mtx.unlock();
 }

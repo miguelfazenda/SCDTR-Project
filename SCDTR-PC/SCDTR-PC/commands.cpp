@@ -230,30 +230,25 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
 
                 //Locks mutex for the streaming active
                 std::lock_guard<std::mutex> lockMtxStreamingActive(program->mtxStreamingActive);
-                
-                //Weather it's the server that sent the command or a client
-                bool server = (clientSession.get() == nullptr);
 
-                //StreamingActive variable pointer of either the server or a client
-                char* streamingActive = server ? &program->streamingActive : &clientSession->streamingActive;
 
-                if(*streamingActive == 0)
+                //This client(or the server) is not streaming that variable. Starts streaming
+                char typeOfStream = line[2];
+                if (typeOfStream == 'I')
                 {
-                    //This client(or the server) is not streaming. Starts streaming
-                    char typeOfStream = line[2];
-                    if (typeOfStream == 'I' || typeOfStream == 'd')
-                    {
-                        *streamingActive = line[2];
-                    }
-                    else
-                    {
-                        *textOutputStream << "Must be buffer 'I' or 'd': " << line << std::endl;
-                    }
+                    //The iluminance is the second bool on the pair
+                    program->activeStreams[destination][clientSession].second =
+                        !program->activeStreams[destination][clientSession].second;
+                }
+                else if (typeOfStream == 'd')
+                {
+                    //The duty-cycle is the second bool on the pair
+                    program->activeStreams[destination][clientSession].first =
+                        !program->activeStreams[destination][clientSession].first;
                 }
                 else
                 {
-                    //Stops streaming
-                    *streamingActive = 0;
+                    *textOutputStream << "Must be buffer 'I' or 'd': " << line << std::endl;
                 }
             }
             else

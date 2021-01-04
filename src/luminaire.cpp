@@ -52,6 +52,8 @@ void Luminaire::loop() {
 		//Samples the voltage
 		control(timeNow, samplingTime);
 
+		didControl = true;
+
 		lastSampleTime = timeNow;
 	}
 
@@ -70,7 +72,7 @@ void Luminaire::control(unsigned long timeNow, unsigned long samplingTime)
 {
 	//Measure error compared to expected voltage
 	float expectedVoltage = simulator.simulate(timeNow);
-	float measuredVoltage = getVoltage();
+	measuredVoltage = getVoltage();
 	//float measuredVoltage = lpf.value(); //Gets voltage from the low-pass filter
 	float errorVoltage = expectedVoltage - measuredVoltage;
 
