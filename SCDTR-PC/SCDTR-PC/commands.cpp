@@ -236,15 +236,27 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
                 char typeOfStream = line[2];
                 if (typeOfStream == 'I')
                 {
+                    //Toggles the bool
                     //The iluminance is the second bool on the pair
-                    program->activeStreams[destination][clientSession].second =
-                        !program->activeStreams[destination][clientSession].second;
+                    bool prevValue = program->activeStreams[destination][clientSession].second;
+
+                    if (prevValue)
+                        //Disabling
+                        *textOutputStream << "ack" << std::endl;
+
+                    program->activeStreams[destination][clientSession].second = !prevValue;
                 }
                 else if (typeOfStream == 'd')
                 {
+                    //Toggles the bool
                     //The duty-cycle is the second bool on the pair
-                    program->activeStreams[destination][clientSession].first =
-                        !program->activeStreams[destination][clientSession].first;
+                    bool prevValue = program->activeStreams[destination][clientSession].first;
+
+                    if (prevValue)
+                        //Disabling
+                        *textOutputStream << "ack" << std::endl;
+
+                    program->activeStreams[destination][clientSession].first = !prevValue;
                 }
                 else
                 {
