@@ -181,10 +181,12 @@ uint32_t SerialComm::executeCommand(Command command)
 		{
 			if(luminaire.cost != command.getFloatValue())
 			{
+				//Serial.println(luminaire.cost);
 				luminaire.cost = command.getFloatValue();
+				//Serial.println(luminaire.cost);
 				communication.sendDoConsensus();
 				consensus.init();
-				EEPROM.put(9, luminaire.cost);
+				EEPROM.put(EEPROM_ADDR_COST, luminaire.cost);
 			}
 		}
 		return 1;
