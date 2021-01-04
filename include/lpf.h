@@ -14,6 +14,7 @@ private:
 public:
     void sample();
     float value();
+    void resetLPF();
 };
 
 #endif

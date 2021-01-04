@@ -99,6 +99,8 @@ public:
     void sendTotalIfAllValueForTotalReceived();
     void sendPCDiscovery();
     void sendListNodesToPC();
+
+    void resetSerialComm();
 };
 
 #endif

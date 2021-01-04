@@ -48,6 +48,8 @@ public:
     void setGain(uint8_t i, uint8_t j, float gain);
 
     void printResidualAndGainMatrix();
+
+    void resetCalib();
 };
 
 #endif

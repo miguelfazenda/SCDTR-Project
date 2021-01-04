@@ -17,6 +17,7 @@ public:
      * @param gain The gain of the system
      */
     int calc(float errorVoltage, unsigned long samplingTime, float luxRef, float systemGain, float residualRead);
+    void controllerReset();
 };
 
 #endif

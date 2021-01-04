@@ -101,3 +101,8 @@ void MainFSM::loop() {
         break;
     }
 }
+
+void MainFSM::resetMainFSM()
+{
+    state = State::Init;
+}

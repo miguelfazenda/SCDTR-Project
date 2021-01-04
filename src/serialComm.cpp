@@ -190,6 +190,17 @@ uint32_t SerialComm::executeCommand(Command command)
 			}
 		}
 		return 1;
+		else if (command.cmd == 'r')
+		{
+			calibrationFSM.resetCalib();
+			consensus.resetConsensus();
+			lpf.resetLPF();
+			luminaire.resetLuminaire();
+			mainFSM.resetMainFSM();
+			resetGlob();
+			resetSerialComm();
+			timeSinceLastReset= millis();
+		}
 	}
 	else if (command.cmd == 'o')
 	{
@@ -306,4 +317,14 @@ void SerialComm::sendListNodesToPC()
 		Serial.write(nodesList[i]);
 
 	Serial.flush();
+}
+
+void SerialComm::resetSerialComm()
+{
+	uint8_t numNodesWaitingResult = 0;
+
+    bool runningTotalCommand = false;
+
+    float totalCommandResult=0.0;
+
 }

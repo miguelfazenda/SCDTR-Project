@@ -51,3 +51,9 @@ int Controller::calc(float errorVoltage, unsigned long samplingTime, float luxRe
 
 	return u;
 }
+
+void Controller::controllerReset()
+{
+	ui = 0.0;
+	u=0.0;
+}

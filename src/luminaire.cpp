@@ -155,3 +155,23 @@ float Luminaire::voltageToLux(float voltage) {
 	float rLDR = R1_val*(5-voltage)/voltage; //(5/vR1-1)*R1_val;
 	return (float)pow(10, (log10(rLDR)- ldrSlopeB)/ldrSlopeM);
 }
+
+void Luminaire::resetLuminaire()
+{
+
+    lastSampleTime = 0;
+    lpfSampleTime = 0;
+    ldrSlopeB = 0.0f;
+    ldrSlopeM = 0.0f;
+
+	systemGain = 0.0;
+
+	controller.controllerReset();
+
+    occupied = false;
+    luxRef=0.0;
+    luxRefAfterConsensus = 0.0;
+    luxOccupied = 100.0;
+    luxNonOccupied = 30.0;
+
+}

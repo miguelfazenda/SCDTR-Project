@@ -26,6 +26,7 @@ extern uint8_t nodeIndexOnGainMatrix[MAX_NODE_ID+1];
 extern uint8_t numTotalNodes;
 //Which node is the hub node (0 for none)
 extern uint8_t hubNode;
+extern unsigned long timSinceLastReset;
 
 //extern unsigned int lastResetTime; //time since last restart
 
@@ -40,4 +41,5 @@ extern Consensus consensus;
 
 void registerNewNode(uint8_t id);
 bool checkIfNodeExists(uint8_t destination);
+void resetGlob();
 #endif
