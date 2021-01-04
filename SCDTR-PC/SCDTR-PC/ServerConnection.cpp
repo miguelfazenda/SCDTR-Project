@@ -18,6 +18,11 @@ ServerConnection::ServerConnection(boost::asio::io_context& io_context, weak_ptr
 	this->server = server;
 }
 
+ServerConnection::~ServerConnection()
+{
+	cout << "A client has disconnected" << endl;
+}
+
 void ServerConnection::start()
 {
 	sendMessage("Welcome!\n");
@@ -31,7 +36,17 @@ void ServerConnection::sendMessage(std::string msg)
 	async_write(socket, boost::asio::buffer(msg.c_str(), msg.size()+1),
 		[this](const boost::system::error_code& err, std::size_t len)
 		{
-			cout << "written!" << endl;
+			if (err)
+			{
+				//Removes client from the server
+				if (shared_ptr<Server> server_ptr = server.lock()) {
+					server_ptr->removeClientSession(shared_from_this());
+				}
+			}
+			else
+			{
+				cout << "written!" << endl;
+			}
 		}
 	);
 }
@@ -45,8 +60,10 @@ void ServerConnection::start_receive_read()
 	{
 		if (err)
 		{
-			//TODO remover o cliente
-			std::cout << "Erro TODO QUE FALTA IMPLEMETAR " << std::endl;
+			//Removes client from the server
+			if (shared_ptr<Server> server_ptr = server.lock()) {
+				server_ptr->removeClientSession(shared_from_this());
+			}
 		}
 
 		if (len > 0)

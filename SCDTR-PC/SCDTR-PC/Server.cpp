@@ -346,8 +346,16 @@ void Server::removeClientSession(shared_ptr<ServerConnection> client)
 
     auto iterClientToRemove = find(clientSessions.begin(), clientSessions.end(), client);
     clientSessions.erase(iterClientToRemove);
-
+    
     mtxClientSessions.unlock();
+
+    //Removes the pointers to this client in the activeStreams
+    mtxStreamingActive.lock();
+    for (auto &activeStreamsForNode : activeStreams)
+    {
+        activeStreamsForNode.second.erase(client);
+    }
+    mtxStreamingActive.unlock();
 }
 
 void streamPWM(std::ostream& textOutputStream, uint8_t pwm)
@@ -392,15 +400,15 @@ void Server::receivedFrequentData(uint8_t nodeId, uint8_t pwm, float iluminance)
             if (streamingIluminance)
                 streamIluminance(cout, iluminance);
         }
-        else
+        else if (streamingPWM || streamingIluminance)
         {
             std::ostringstream textOutputForClient;
 
             //The streaming mode is active in the client, print it to the buffer textOutputForClient
             if (streamingPWM)
-                streamPWM(cout, pwm);
+                streamPWM(textOutputForClient, pwm);
             if (streamingIluminance)
-                streamIluminance(cout, iluminance);
+                streamIluminance(textOutputForClient, iluminance);
 
             //Sends the text in the buffer
             clientSession->sendMessage(textOutputForClient.str());

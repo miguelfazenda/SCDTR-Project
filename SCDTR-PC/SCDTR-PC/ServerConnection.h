@@ -11,6 +11,7 @@ class ServerConnection : public std::enable_shared_from_this<ServerConnection>
 {
 public:
 	ServerConnection(boost::asio::io_context& io_context, std::weak_ptr<Server> server);
+	~ServerConnection();
 	void start();
 	void sendMessage(std::string msg);
 
