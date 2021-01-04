@@ -56,14 +56,14 @@ int runServer(char* serialStr)
         program->start(serialStr);
 
         thread thread1{ run_service };
-        /*thread thread2{ run_service };
+        thread thread2{ run_service };
         thread thread3{ run_service };
-        thread thread4{ run_service };*/
+        thread thread4{ run_service };
 
         thread1.join();
-        /*thread2.join();
+        thread2.join();
         thread3.join();
-        thread4.join();*/
+        thread4.join();
     }
     catch (std::exception& e)
     {
