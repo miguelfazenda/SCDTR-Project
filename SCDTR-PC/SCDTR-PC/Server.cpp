@@ -3,22 +3,25 @@
 #include <iostream>
 #include <ctime>
 #include <thread>
+#include <memory>
 
 #include "convertion.h"
 #include "commands.h"
+
 using boost::asio::ip::tcp;
+using boost::asio::ip::udp;
 using namespace std;
 
 
 Server::Server(boost::asio::io_context& io)
     : io_context { io },
     acceptor(io_context, tcp::endpoint(tcp::v4(), TCP_PORT)),
-    serial_port { io_context },
-    udpSocket { io_context }
+    serial_port { io_context }
+    //udpSocket { io_context, udp::endpoint(udp::v4(), TCP_PORT+1) }
 {
     //Creates the command timeout timer
-    timerCommandTimeout = make_unique<boost::asio::steady_timer>(
-        boost::asio::steady_timer{ io_context, boost::asio::chrono::seconds {3} }
+    timerCommandTimeout = unique_ptr<boost::asio::steady_timer>(
+        new boost::asio::steady_timer{ io_context, boost::asio::chrono::seconds {3} }
     );
 }
 
@@ -37,6 +40,17 @@ void Server::start(const char* serialStr)
     start_read_console();
     start_read_serial();
     tcp_start_accept();
+	/*
+    udpSocket.async_receive_from(
+        boost::asio::buffer(updReceiveBuf), udpRemoteEndpoint,
+        [this](const boost::system::error_code& err, std::size_t len)
+        {
+            udpSocket.async_send_to(boost::asio::buffer(updReceiveBuf), udpRemoteEndpoint,
+                [this](const boost::system::error_code& err, std::size_t len)
+            {
+            });
+        }
+    );*/
 }
 
 
@@ -52,7 +66,11 @@ void Server::start_read_console()
             getline(input, line, '@');
 
             Command command = Commands::interpretCommand(line, &cout, shared_ptr<ServerConnection>(nullptr));
-            if (command.cmd != '\0')
+            if (command.cmd == 'q')
+            {
+                quit();
+            }
+            else if (command.cmd != '\0')
             {
                 //Means the a command was read from the line (invalid command will have cmd=='\0')    
                 //The client will be set to a null pointer to indicate it was sent by the server itself
@@ -64,12 +82,16 @@ void Server::start_read_console()
     );
 }
 
+void Server::quit()
+{
+    io_context.stop();
+}
 
 void Server::tcp_start_accept()
 {
     //The connection to a client
     //Has to be a pointer because it is passed to the handle_accept and here it goes out of scope
-    const auto newSession = make_shared<ServerConnection>(io_context, weak_from_this());
+    const auto newSession = make_shared<ServerConnection>(io_context, shared_from_this());
 
     acceptor.async_accept(newSession->socket,
         [this, newSession](const boost::system::error_code& err)
@@ -116,7 +138,7 @@ void Server::handle_read_serial(const boost::system::error_code &err, size_t len
     while((syncBytePos = line.find((char)255, offset)) != string::npos)
     {
         //Size of the message (default 2 - 1 byte for 255 another for the char 'F', 'D', etc.)
-        int sizeMsg = 2;
+        size_t sizeMsg = 2;
 
         //If it's detected the serial hasn't read enough, the unfinished part must be stored
         //  so that it's used the next time data arrives

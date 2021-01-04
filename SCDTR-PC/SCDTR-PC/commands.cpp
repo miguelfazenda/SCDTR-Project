@@ -17,7 +17,7 @@ uint8_t Commands::commandGetDestination(const std::string & substring)
     {
         destination = std::stoi(substring);
     }
-    catch (std::exception)
+    catch (std::exception&)
     {
         throw input_exception("Destination must be an integer");
     }
@@ -169,8 +169,14 @@ pair<uint8_t, bool> Commands::checkSetArgumentsBool(const std::string& data)
 Command Commands::interpretCommand(std::string line, std::ostream* textOutputStream,
     std::shared_ptr<ServerConnection> clientSession)
 {
-    Command command;
-
+    if (line.length() >= 1 && line[0] == 'q')
+    {
+        return Command((char)line[0], 0, '\0');
+    }
+    else if (line.length() >= 1 && line[0] == 'r')
+    {
+        return Command((char)line[0], 0, '\0');
+    }
     if (line.length() > 2 && line[1] == ' ')
     {
         uint8_t destination;
@@ -182,7 +188,7 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
                 destination = checkGetArguments(&line);
                 /*std::cout << line[2] << " "
                             << "Destination: " << destination << std::endl;*/
-                command = Command((char)line[0], destination, (char)line[2]);
+                return Command((char)line[0], destination, (char)line[2]);
             }
             else if (line[0] == 'O' || line[0] == 'U' || line[0] == 'c')
             {
@@ -191,7 +197,7 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
                 uint8_t destination = destinationAndValue.first;
                 float value = destinationAndValue.second;
 
-                command = Command((char)line[0], destination, value);
+                return Command((char)line[0], destination, value);
             }
             else if(line[0] == 'o')
             {
@@ -204,14 +210,7 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
                         << "Destination: " << destination
                         << "Value: " << (boolValue == 0 ? "false" : "true") << std::endl;*/
 
-                command = Command((char)line[0], destination, (char)boolValue);
-            }
-            else if (line[0] == 'r')
-            {
-                destination = checkGetArguments(&line);
-                /*std::cout << line[2] << " "
-                            << "Destination: " << destination << std::endl;*/
-                command = Command((char)line[0], destination, '\0');
+                return Command((char)line[0], destination, (char)boolValue);
             }
             else if(line[0] == 'b')
             {
@@ -273,5 +272,5 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
         *textOutputStream << "Unknown command 🤔: " << line << std::endl;
     }
 
-    return command;
+    return Command();
 }
