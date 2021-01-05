@@ -34,7 +34,7 @@ public:
         //Convert 2 bytes to short
         Convertion illuminanceConvertion;
         illuminanceConvertion.valueBytes[0] = buffer[1];
-        illuminanceConvertion.valueBytes[0] = buffer[2];
+        illuminanceConvertion.valueBytes[1] = buffer[2];
         this->iluminanceShort = illuminanceConvertion.value16b;
 
         this->pwm = buffer[5];
