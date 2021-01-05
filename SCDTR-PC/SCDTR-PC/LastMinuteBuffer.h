@@ -9,7 +9,6 @@
 
 struct FrequentDataValues
 {
-    time_t millisecond;
     uint8_t pwm;
     float iluminance;
 };

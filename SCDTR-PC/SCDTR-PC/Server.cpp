@@ -416,7 +416,7 @@ void Server::receivedFrequentData(uint8_t nodeId, uint8_t pwm, float iluminance)
     }
     mtxClientSessions.unlock();
 
-    lastMinuteBuffer2.addToLastMinuteBuffer(nodeId, pwm, iluminance);
+    lastMinuteBuffer2.addToLastMinuteBuffer(nodeId, FrequentDataValues{ pwm, iluminance } );
 }
 
 void Server::addCommandToQueue(Command command, shared_ptr<ServerConnection> client)
