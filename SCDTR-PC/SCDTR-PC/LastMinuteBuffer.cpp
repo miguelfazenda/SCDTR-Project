@@ -4,7 +4,7 @@
 
 using namespace std;
 
-void LastMinuteBuffer::addToLastMinuteBuffer(uint8_t nodeId, uint8_t pwm, float iluminance)
+void LastMinuteBuffer::addToLastMinuteBuffer(uint8_t nodeId, FrequentDataValues frequentDataValues)
 {
     removeOldLastMinuteBufferEntries();
     time_t timeNow = time(0);
@@ -13,7 +13,7 @@ void LastMinuteBuffer::addToLastMinuteBuffer(uint8_t nodeId, uint8_t pwm, float 
     mtx.lock();
     //std::map<unsigned long, std::pair<uint8_t, float>> a = lastMinuteBuffer[nodeId];
 
-    lastMinuteBuffer[nodeId][timeNow].push_back(make_pair(pwm, iluminance));
+    lastMinuteBuffer[nodeId][timeNow].push_back(frequentDataValues);
     mtx.unlock();
 }
 
@@ -84,11 +84,11 @@ void LastMinuteBuffer::printLastMinuteBuffer(const uint8_t nodeId, const bool pw
         {
             if (pwm)
             {
-                *textOutputStream << entry->first * 100 / 255 << "%";
+                *textOutputStream << entry->pwm * 100 / 255 << "%";
             }
             else
             {
-                *textOutputStream << entry->second;
+                *textOutputStream << entry->iluminance;
             }
 
 

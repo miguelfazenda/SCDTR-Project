@@ -129,11 +129,13 @@ void resetGlob()
 {
 	for (uint8_t i = 0; i < numTotalNodes; i++)
 	{
-		nodeIndexOnGainMatrix[nodesList[i]]=0;
-		nodesList[i]=0;
+		nodeIndexOnGainMatrix[nodesList[i]] = 0;
+		nodesList[i] = 0;
 	}
-	numTotalNodes=0;
-	
+	numTotalNodes = 0;
+
+	//Registers this node's id on the nodesList array
+	registerNewNode(nodeId);
 }
 
 void irqHandler()
@@ -141,7 +143,7 @@ void irqHandler()
 	can_frame frm;
 	uint8_t irq = mcp2515.getInterrupts();
 	//check messages in buffer 0
-	
+
 	if (irq & MCP2515::CANINTF_RX0IF)
 	{
 		mcp2515.readMessage(MCP2515::RXB0, &frm);
@@ -163,7 +165,6 @@ void irqHandler()
 		mcp2515_overflow = true;
 		mcp2515.clearRXnOVRFlags();
 	}
-
 
 	//mcp2515.clearInterrupts();
 
@@ -210,17 +211,17 @@ void loop()
 	{
 		serialComm.sendPCDiscovery();
 
-		if(hubNode != 0)
+		if (hubNode != 0)
 			sendFrequentData();
+			
 		timeLastSentFrequentData = timeNow;
 	}
 
 	mainFSM.loop();
-	
-	if(didControl)
-		if(hubNode != 0)
-			sendFrequentData();
 
+	// if (didControl)
+	// 	if (hubNode != 0)
+	// 		sendFrequentData();
 
 	if (consensus.consensusState != 0)
 	{
@@ -231,7 +232,7 @@ void loop()
 		Serial.println(consensus.consensusState);
 	}
 
-	if(didControl)
+	if (didControl)
 		didControl = false;
 }
 

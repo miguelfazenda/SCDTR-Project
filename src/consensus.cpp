@@ -71,7 +71,7 @@ void Consensus::consensus_iterate()
         dutyCycleBest[i] = -1;
     }
 
-    unsigned long costBest = 100000; // large number
+    float costBest = 100000; // large number
 
     // ---------------- z value and unconstrained solution ----------------
     float z[numTotalNodes] = {0};
@@ -101,8 +101,23 @@ void Consensus::consensus_iterate()
     //---------------- Compute minimum constrained to linear boundary ----------------
     for (uint8_t i = 0; i < numTotalNodes; i++)
     {
+        Serial.print(F("rho= "));
+        Serial.print(rho);
+        Serial.print(F(" Z= "));
+        Serial.print(z[i]);
+        Serial.print(F(" o= "));
+        Serial.print(calibrationFSM.residualArray[nodeIdx]);
+        Serial.print(F(" LiRef= "));
+        Serial.print(LiRef);
+        Serial.print(F(" 1/rho*Z= "));
+        Serial.print(1 / rho * z[i]);
+        Serial.print(F(" ki[i] / kiNorm= "));
+        Serial.print(ki[i] / kiNorm);
+        Serial.print(F(" parentesis= "));
+        Serial.println((calibrationFSM.residualArray[nodeIdx] - LiRef + 1 / rho * multiplyTwoArrays(z, ki, numTotalNodes)));
         dutyCycleTest[i] = 1 / rho * z[i] - ki[i] / kiNorm * (calibrationFSM.residualArray[nodeIdx] - LiRef + 1 / rho * multiplyTwoArrays(z, ki, numTotalNodes));
     }
+    
 
     //check feasibility of minimum constrained to linear boundary
     float costBoundaryLinear = 0.0;
@@ -196,6 +211,10 @@ void Consensus::consensus_iterate()
     if (check_feasibility(dutyCycleTest))
     {
         costBoundaryL100 = evaluate_cost(dutyCycleTest);
+        Serial.print(F("No L0 CB < Cbest? -> "));
+            Serial.println(costBoundaryL100 < costBest);
+            Serial.println(costBoundaryL100);
+            Serial.println(costBest);
         if (costBoundaryL100 < costBest)
         {
             Serial.print(F("Foi escolhido L100 -> "));

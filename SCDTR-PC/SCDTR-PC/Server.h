@@ -56,7 +56,7 @@ public:
     std::mutex mtxStreamingActive;
     //Map - Key: nodeId, Value: a list of active streams (pairs of char and pointer to client session)
     //  The char can be 'I' or 'd' for iluminance and duty-cycle, the pointer can be null to indicate streaming to the server console
-    std::map<int, std::map<shared_ptr<ServerConnection>, std::pair<bool, bool>>> activeStreams;
+    std::map<uint8_t, std::map<shared_ptr<ServerConnection>, std::pair<bool, bool>>> activeStreams;
 private:
 	void commandTimedOut(const boost::system::error_code& e);
 

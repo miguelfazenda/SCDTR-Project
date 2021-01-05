@@ -148,7 +148,7 @@ void CalibrationFSM::runStateWaitTrasient(unsigned long timeSinceLastTransition)
     if (timeSinceLastTransition > 1000000) //TODO falta o tau
     {
         //Measure
-        luxReads[luxReadNum] = luminaire.voltageToLux(luminaire.getVoltage());
+        luxReads[luxReadNum] = luminaire.voltageToLux(luminaire.getVoltage()) - residualArray[nodeId];
 #ifdef CALIB_PRINTS
         Serial.print(F("luxReads["));
         Serial.print(luxReadNum);

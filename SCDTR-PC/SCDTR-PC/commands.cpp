@@ -266,7 +266,7 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
             else
             {
                 //no messagem type recognized
-                *textOutputStream << "Unknown command 🤔: " << line << std::endl;
+                *textOutputStream << "Unknown command: " << line << std::endl;
             }
         }
         catch (std::exception &e)
@@ -276,7 +276,7 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
     }
     else
     {
-        *textOutputStream << "Unknown command 🤔: " << line << std::endl;
+        *textOutputStream << "Unknown command: " << line << std::endl;
     }
 
     return Command();
