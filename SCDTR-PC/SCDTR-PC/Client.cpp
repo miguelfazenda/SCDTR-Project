@@ -66,9 +66,8 @@ void Client::start(char* hostname)
 
 void Client::handle_read_input(const boost::system::error_code& err, std::size_t len)
 {
-    std::istream input(&console_stm_buff);
-    std::string line;
-    getline(input, line, '@');
+    string line(boost::asio::buffer_cast<const char*>(console_stm_buff.data()), console_stm_buff.size());
+    console_stm_buff.consume(console_stm_buff.size());
 
     if (len > 0)
     {

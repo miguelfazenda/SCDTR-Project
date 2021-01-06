@@ -22,6 +22,7 @@ LPF lpf;
 CalibrationFSM calibrationFSM;
 SerialComm serialComm;
 Consensus consensus;
+Metrics metrics;
 
 MCP2515 mcp2515(10);
 
@@ -74,6 +75,71 @@ void setup()
 	communication.init(&mcp2515, &cf_stream);
 
 	luminaire.init(false);
+}
+
+void loop()
+{
+	serialComm.readSerial();
+
+	if (interrupt)
+	{
+		interrupt = false;
+		if (mcp2515_overflow)
+		{
+			Serial.println("\t\t\t\tMCP2516 RX BufOverflow");
+			mcp2515_overflow = false;
+		}
+		if (arduino_overflow)
+		{
+			Serial.println("\t\t\t\tArduinoBuffers Overflow");
+			arduino_overflow = false;
+		}
+
+		can_frame frame;
+		bool has_data;
+
+		cli();
+		has_data = cf_stream.get(frame);
+		sei();
+
+		while (has_data)
+		{
+			communication.received(&luminaire, &frame);
+
+			cli();
+			has_data = cf_stream.get(frame);
+			sei();
+		}
+	}
+
+	unsigned long timeNow = millis();
+	if (timeNow - timeLastSentFrequentData > 2000)
+	{
+		serialComm.sendPCDiscovery();
+
+		if (hubNode != 0)
+			sendFrequentData();
+					
+		timeLastSentFrequentData = timeNow;		
+	}
+
+	mainFSM.loop();
+
+	if (didControl)
+	{
+		//if (hubNode != 0)
+			//sendFrequentData();
+		
+		metrics.updateMetrics();
+	}
+
+	if (consensus.consensusState != OFF_STATE)
+	{
+		consensus.consensus_main();
+	}
+
+	if (didControl)
+		didControl = false;
 }
 
 /**
@@ -170,74 +236,6 @@ void irqHandler()
 
 	interrupt = true; //notifyloop()
 }
-
-void loop()
-{
-	serialComm.readSerial();
-
-	if (interrupt)
-	{
-		interrupt = false;
-		if (mcp2515_overflow)
-		{
-			Serial.println("\t\t\t\tMCP2516 RX BufOverflow");
-			mcp2515_overflow = false;
-		}
-		if (arduino_overflow)
-		{
-			Serial.println("\t\t\t\tArduinoBuffers Overflow");
-			arduino_overflow = false;
-		}
-
-		can_frame frame;
-		bool has_data;
-
-		cli();
-		has_data = cf_stream.get(frame);
-		sei();
-
-		while (has_data)
-		{
-			communication.received(&luminaire, &frame);
-
-			cli();
-			has_data = cf_stream.get(frame);
-			sei();
-		}
-	}
-
-	unsigned long timeNow = millis();
-	if (timeNow - timeLastSentFrequentData > 2000)
-	{
-		serialComm.sendPCDiscovery();
-
-		if (hubNode != 0)
-			sendFrequentData();
-					
-		timeLastSentFrequentData = timeNow;		
-	}
-
-	mainFSM.loop();
-
-	// if (didControl)
-	// 	if (hubNode != 0)
-	// 		sendFrequentData();
-	//	Chamar Update Metrics	
-
-	if (consensus.consensusState != OFF_STATE)
-	{
-		consensus.consensus_main();
-	}
-
-	if (didControl)
-		didControl = false;
-}
-
-int checkGetArguments(String data, int *flagT);
-int checkSetArguments(String data, float *val);
-int checkOtherArguments(String data);
-bool checkIfNodeExists(uint8_t destination);
-bool checkAndPrintCommandError(uint8_t destination);
 
 void sendFrequentData()
 {

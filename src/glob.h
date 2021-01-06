@@ -8,6 +8,7 @@
 #include "lpf.h"
 #include "serialComm.h"
 #include "consensus.h"
+#include "metrics.h"
 
 #define CALIB_PRINTS
 
@@ -41,6 +42,7 @@ extern LPF lpf;
 extern CalibrationFSM calibrationFSM;
 extern SerialComm serialComm;
 extern Consensus consensus;
+extern Metrics metrics;
 
 
 void registerNewNode(uint8_t id);

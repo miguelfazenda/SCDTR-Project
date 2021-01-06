@@ -60,10 +60,8 @@ void Server::start_read_console()
         [this](const boost::system::error_code& err, std::size_t len)
         {
             //When user inputed something on the console. console_stm_buff contains the value
-
-            std::istream input(&console_stm_buff);
-            std::string line;
-            getline(input, line, '@');
+            string line(boost::asio::buffer_cast<const char*>(console_stm_buff.data()), console_stm_buff.size());
+            console_stm_buff.consume(console_stm_buff.size());
 
             Command command = Commands::interpretCommand(line, &cout, shared_ptr<ServerConnection>(nullptr));
             if (command.cmd == 'q')
@@ -118,9 +116,8 @@ void Server::writeToSerialPort(boost::asio::mutable_buffer buf)
  */
 void Server::handle_read_serial(const boost::system::error_code &err, size_t len)
 {
-    istream input(&serial_stm_buff);
-    string line;
-    getline(input, line, '@');
+    string line(boost::asio::buffer_cast<const char*>(serial_stm_buff.data()), serial_stm_buff.size());
+    serial_stm_buff.consume(serial_stm_buff.size());
 
     //If the last message was unfinished, merge it with the received part
     if (!unfinishedSerialString.empty())
@@ -178,6 +175,13 @@ void Server::handle_read_serial(const boost::system::error_code &err, size_t len
                 sizeMsg = 5; //Tamanho da mensagem em bytes (a contar com o sync byte e com o 'F')
                 if (line.length() - syncBytePos >= sizeMsg)
                 {
+                    /*auto a = (uint8_t)line[syncBytePos + 2];
+                    auto b = (uint8_t)line[syncBytePos + 3];
+                    auto c = (uint8_t)line[syncBytePos + 4];
+                    auto d = (uint8_t)line[syncBytePos + 5];
+
+                    cout << "AAAAAAAAAAAA " << a << " " << b << " " << c << " " << d << endl;*/
+
                     uint32_t value = (uint32_t)((uint8_t)line[syncBytePos + 2]) << 24 |
                         (uint32_t)((uint8_t)line[syncBytePos + 3]) << 16 |
                         (uint32_t)((uint8_t)line[syncBytePos + 4]) << 8 |
@@ -211,7 +215,7 @@ void Server::handle_read_serial(const boost::system::error_code &err, size_t len
                 {
                     //Reads the number of nodes. Therefore the message occupies more numNodes bytes
                     int numNodes = (uint8_t)line[syncBytePos + 2];
-                    sizeMsg = 3 + numNodes;
+                    sizeMsg = 3 + (size_t)numNodes;
 
                     if (line.length() - syncBytePos >= sizeMsg)
                     {

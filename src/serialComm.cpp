@@ -148,15 +148,19 @@ uint32_t SerialComm::executeCommand(Command command)
 		}
 		else if (command.getType() == 'p')
 		{
-			
+			convert.valueFloat = metrics.powerConsumption();
 		}
 		else if (command.getType() == 'e')
 		{
-			
+			convert.valueFloat = metrics.energyConsumedSinceLastReset;
 		}
 		else if (command.getType() == 'v')
 		{
-			
+			convert.valueFloat = metrics.visibilityError;
+		}
+		else if (command.getType() == 'f')
+		{
+			convert.valueFloat = metrics.flickerError;
 		}
 
 		return convert.value32b;
@@ -214,6 +218,7 @@ uint32_t SerialComm::executeCommand(Command command)
 		lpf.resetLPF();
 		luminaire.resetLuminaire();
 		mainFSM.resetMainFSM();
+		metrics.resetMetrics();
 		resetGlob();
 		resetSerialComm();
 		timeSinceLastReset = millis();
