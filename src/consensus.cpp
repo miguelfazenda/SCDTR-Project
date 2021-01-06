@@ -290,7 +290,9 @@ void Consensus::consensus_main()
                 Serial.print(dutyCycleBest[i]);Serial.print(" * ");Serial.println(ki[i]);
                 newLuxRef += (dutyCycleBest[i]) * ki[i];
             }
-            newLuxRef -= calibrationFSM.residualArray[nodeIdx];
+
+            newLuxRef += calibrationFSM.residualArray[nodeIdx];
+
             Serial.print(F("No FINAL DO CONSENSUS ----->"));
         	Serial.println(newLuxRef);
             luminaire.setLuxRefAfterConsensus(newLuxRef); //Change luxRefAfterConsensus and starts simulation

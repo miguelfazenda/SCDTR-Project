@@ -8,6 +8,7 @@
 #include <map>
 #include <queue>
 #include <mutex>
+#include <fstream>
 #include "command.h"
 #include "ServerConnection.h"
 #include "LastMinuteBuffer.h"
@@ -32,6 +33,12 @@ public:
 
     void addCommandToQueue(Command command, shared_ptr<ServerConnection> client);
     void executeNextInCommandQueue();
+
+    //Starts saving the values
+    void startSaveValues(std::ostream& textOutputStream);
+    //Stops saving the values
+    void stopSaveValues(std::ostream& textOutputStream);
+
     /*
      * Shows the response and moves to the next command in the queue
      * Called when a response to a command was received on the Serial
@@ -50,7 +57,7 @@ public:
     std::mutex mtxCommandsQueue;
     queue<CommandQueueElement> commandsQueue;
 
-    LastMinuteBuffer lastMinuteBuffer2;
+    LastMinuteBuffer lastMinuteBuffer;
 
 
     std::mutex mtxStreamingActive;
@@ -67,6 +74,11 @@ private:
 	std::mutex mtxClientSessions;
 	std::vector<std::shared_ptr<ServerConnection>> clientSessions;
 
+    //Respective to the file writing functionality
+    std::mutex mtxWriteToFile;
+    std::string fileName;
+    bool writingToFile = false;
+    std::ofstream fileOutput;
 
 	boost::asio::io_context& io_context;
 	boost::asio::ip::tcp::acceptor acceptor;

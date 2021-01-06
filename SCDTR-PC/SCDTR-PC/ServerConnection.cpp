@@ -73,7 +73,7 @@ void ServerConnection::start_receive_read()
 			//Writes the command response here if it's to then be redirected to the client
 			std::ostringstream textOutputForClient;
 
-			Command command = Commands::interpretCommand(line, &textOutputForClient, shared_from_this());
+			Command command = Commands::interpretCommand(line, textOutputForClient, shared_from_this());
 			if (command.cmd != '\0')
 			{
 				//Means the a command was read from the line (invalid command will have cmd=='\0')
