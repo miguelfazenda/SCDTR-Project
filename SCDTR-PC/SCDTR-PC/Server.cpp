@@ -63,7 +63,7 @@ void Server::start_read_console()
             string line(boost::asio::buffer_cast<const char*>(console_stm_buff.data()), console_stm_buff.size());
             console_stm_buff.consume(console_stm_buff.size());
 
-            Command command = Commands::interpretCommand(line, &cout, shared_ptr<ServerConnection>(nullptr));
+            Command command = Commands::interpretCommand(line, cout, shared_ptr<ServerConnection>(nullptr));
             if (command.cmd == 'q')
             {
                 quit();
@@ -379,48 +379,61 @@ void streamIluminance(std::ostream& textOutputStream, float iluminance)
 */
 void Server::receivedFrequentData(uint8_t nodeId, uint8_t pwm, float iluminance)
 {
-    //Locks mutex for the streaming active
-    std::lock_guard<std::mutex> lockMtxStreamingActive(mtxStreamingActive);
-
-    //If the streaming mode is active in the server, print it to cout
-    
-    auto activeStreamsAboutThisNode = activeStreams[nodeId];
-
-    mtxClientSessions.lock();
-    for (auto clientActiveStreams : activeStreamsAboutThisNode)
+    /* Writing data to file functionality */
     {
-        auto clientSession = clientActiveStreams.first;
-        //clientSession nullptr means it's a stream to the server console
-        bool isServer = clientSession.get() == nullptr;
+        //Locks mutex for the file writing
+        std::lock_guard<std::mutex> lockMtxWriteToFile(mtxWriteToFile);
 
-        bool streamingPWM = clientActiveStreams.second.first;
-        bool streamingIluminance = clientActiveStreams.second.second;
-
-        if (isServer)
+        if (writingToFile)
         {
-            //Stream the value to std::cout
-            if (streamingPWM)
-                streamPWM(cout, pwm);
-            if (streamingIluminance)
-                streamIluminance(cout, iluminance);
-        }
-        else if (streamingPWM || streamingIluminance)
-        {
-            std::ostringstream textOutputForClient;
-
-            //The streaming mode is active in the client, print it to the buffer textOutputForClient
-            if (streamingPWM)
-                streamPWM(textOutputForClient, pwm);
-            if (streamingIluminance)
-                streamIluminance(textOutputForClient, iluminance);
-
-            //Sends the text in the buffer
-            clientSession->sendMessage(textOutputForClient.str());
+            fileOutput << (int)nodeId << ", " << pwm*100.0f/255.0f << ", " << iluminance << endl;
         }
     }
-    mtxClientSessions.unlock();
 
-    lastMinuteBuffer2.addToLastMinuteBuffer(nodeId, FrequentDataValues{ pwm, iluminance } );
+    /* Streaming functionality */
+    {
+        //Locks mutex for the streaming active
+        std::lock_guard<std::mutex> lockMtxStreamingActive(mtxStreamingActive);
+
+        auto activeStreamsAboutThisNode = activeStreams[nodeId];
+
+        mtxClientSessions.lock();
+        for (auto clientActiveStreams : activeStreamsAboutThisNode)
+        {
+            auto clientSession = clientActiveStreams.first;
+            //clientSession nullptr means it's a stream to the server console
+            bool isServer = clientSession.get() == nullptr;
+
+            bool streamingPWM = clientActiveStreams.second.first;
+            bool streamingIluminance = clientActiveStreams.second.second;
+
+            if (isServer)
+            {
+                //Stream the value to std::cout
+                if (streamingPWM)
+                    streamPWM(cout, pwm);
+                if (streamingIluminance)
+                    streamIluminance(cout, iluminance);
+            }
+            else if (streamingPWM || streamingIluminance)
+            {
+                std::ostringstream textOutputForClient;
+
+                //The streaming mode is active in the client, print it to the buffer textOutputForClient
+                if (streamingPWM)
+                    streamPWM(textOutputForClient, pwm);
+                if (streamingIluminance)
+                    streamIluminance(textOutputForClient, iluminance);
+
+                //Sends the text in the buffer
+                clientSession->sendMessage(textOutputForClient.str());
+            }
+        }
+        mtxClientSessions.unlock();
+    }
+
+    //Writes to the LastMinuteBuffer
+    lastMinuteBuffer.addToLastMinuteBuffer(nodeId, FrequentDataValues{ pwm, iluminance } );
 }
 
 void Server::addCommandToQueue(Command command, shared_ptr<ServerConnection> client)
@@ -485,6 +498,59 @@ void Server::executeNextInCommandQueue()
             boost::asio::placeholders::error)
     );
 }
+
+//Starts saving the values
+void Server::startSaveValues(std::ostream& textOutputStream)
+{
+    if (writingToFile)
+    {
+        textOutputStream << "Alreading saving to file " << fileName << endl;
+        return;
+    }
+
+    bool fileOpenedSuccessfully = true;
+    mtxWriteToFile.lock();
+
+    writingToFile = true;
+    try
+    {
+        fileName = "teste.txt";
+        fileOutput = ofstream(fileName);
+    }
+    catch (exception& ex)
+    {
+        fileOpenedSuccessfully = false;
+        
+        //Prints the error with description
+        textOutputStream << "Error opening file: " << ex.what() << endl;
+
+        //Prints the error to the server with description, if the sender was not the server
+        if(&textOutputStream != &cout)
+            cout << "Error opening file: " << ex.what() << endl;
+    }
+
+    mtxWriteToFile.unlock();
+
+    if (fileOpenedSuccessfully)
+        textOutputStream << "Started saving values to file " << fileName << endl;
+}
+
+//Stops saving the values
+void Server::stopSaveValues(std::ostream& textOutputStream)
+{
+    mtxWriteToFile.lock();
+
+    if (writingToFile)
+    {
+        fileOutput.close();
+        writingToFile = false;
+        textOutputStream << "Stoped saving values to file " << fileName << endl;
+    }
+
+    mtxWriteToFile.unlock();
+}
+
+
 
 /*
  * The last command went too long without a response

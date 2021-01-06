@@ -50,10 +50,10 @@ int runServer(char* serialStr)
 {
     try
     {
-        std::shared_ptr<Server> program = std::make_shared<Server>(io_context);
-        Commands::program = program;
+        std::shared_ptr<Server> server = std::make_shared<Server>(io_context);
+        Commands::server = server;
 
-        program->start(serialStr);
+        server->start(serialStr);
 
         thread thread1{ run_service };
         thread thread2{ run_service };

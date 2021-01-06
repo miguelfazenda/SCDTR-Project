@@ -1,6 +1,6 @@
 #include "luminaire.h"
 #include <Arduino.h>
-#include <EEPROM.h> 
+#include <EEPROM.h>
 
 #include "glob.h"
 
@@ -11,11 +11,13 @@
 //#define LDR_SLOPE_B 2.20f ZE		48.5 LUX
 
 //Static function
-float Luminaire::getVoltage() {
-	return (analogRead(LDR_PIN))*5/1024.0f;
+float Luminaire::getVoltage()
+{
+	return (analogRead(LDR_PIN)) * 5 / 1024.0f;
 }
 
-void Luminaire::init(bool occupied) {
+void Luminaire::init(bool occupied)
+{
 	pinMode(LED_PIN, OUTPUT);
 	pinMode(LDR_PIN, INPUT);
 
@@ -31,7 +33,8 @@ void Luminaire::init(bool occupied) {
 	//lpf.sample();
 }
 
-void Luminaire::loop() {
+void Luminaire::loop()
+{
 	unsigned long timeNow;
 
 	//Calculates time since last sample
@@ -115,7 +118,6 @@ void Luminaire::control(unsigned long timeNow, unsigned long samplingTime)
 #endif
 }
 
-
 /**
  * Sets the lux reference, and starts a step on the simulator 
  */
@@ -128,17 +130,16 @@ void Luminaire::setLuxRefAfterConsensus(float lux)
 /**
  * Changes occupied state. (Calls setLuxRef)
  */
-void Luminaire::setOccupied(bool o) 
+void Luminaire::setOccupied(bool o)
 {
 	occupied = o;
 
-	int lux = occupied ? luxOccupied : luxNonOccupied;
-	luxRef = lux; //setLuxRef(lux);
+	luxRef = occupied ? luxOccupied : luxNonOccupied;
 
 	Serial.print(F("OCCUPIED\tReference:\tLux="));
-	Serial.print(lux);
+	Serial.print(luxRef);
 	Serial.print("\tV=");
-	Serial.println(luxToVoltage(lux));
+	Serial.println(luxToVoltage(luxRef));
 }
 
 void Luminaire::setSystemGain(float Kii)
@@ -146,33 +147,35 @@ void Luminaire::setSystemGain(float Kii)
 	systemGain = Kii;
 }
 
-
-float Luminaire::luxToVoltage(float lux) {
-	float rLDR = pow(10, ldrSlopeM*log10(lux)+ldrSlopeB);
+float Luminaire::luxToVoltage(float lux)
+{
+	float rLDR = pow(10, ldrSlopeM * log10(lux) + ldrSlopeB);
 	return 5 * R1_val / (R1_val + rLDR);
 }
 
-float Luminaire::voltageToLux(float voltage) {
-	float rLDR = R1_val*(5-voltage)/voltage; //(5/vR1-1)*R1_val;
-	return (float)pow(10, (log10(rLDR)- ldrSlopeB)/ldrSlopeM);
+float Luminaire::voltageToLux(float voltage)
+{
+	float rLDR = R1_val * (5 - voltage) / voltage; //(5/vR1-1)*R1_val;
+	return (float)pow(10, (log10(rLDR) - ldrSlopeB) / ldrSlopeM);
 }
 
 void Luminaire::resetLuminaire()
 {
-
-    lastSampleTime = 0;
-    lpfSampleTime = 0;
-    ldrSlopeB = 0.0f;
-    ldrSlopeM = 0.0f;
+	lastSampleTime = 0;
+	lpfSampleTime = 0;
 
 	systemGain = 0.0;
 
+	//Turns the LED off so it calibrates correctly next time
+	digitalWrite(LED_PIN, 0);
 	controller.controllerReset();
 
-    occupied = false;
-    luxRef=0.0;
-    luxRefAfterConsensus = 0.0;
-    luxOccupied = 100.0;
-    luxNonOccupied = 30.0;
+	luxRef = 0.0;
+	luxRefAfterConsensus = 0.0;
 
+	luxOccupied = 100.0;
+	luxNonOccupied = 30.0;
+
+	//Sets the luxRef to luxNonOccupied
+	setOccupied(false);
 }

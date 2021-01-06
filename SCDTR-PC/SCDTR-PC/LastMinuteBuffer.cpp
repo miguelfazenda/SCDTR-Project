@@ -56,7 +56,7 @@ void LastMinuteBuffer::removeOldLastMinuteBufferEntries()
  * @param pwm : true: print PWM, false: print Iluminance
  * @param textOutputStream: where to print to. Can be &std::cout or a buffer to send to a client for ex.
  */
-void LastMinuteBuffer::printLastMinuteBuffer(const uint8_t nodeId, const bool pwm, std::ostream* textOutputStream)
+void LastMinuteBuffer::printLastMinuteBuffer(const uint8_t nodeId, const bool pwm, std::ostream& textOutputStream)
 {
     //Prints header
     cout << "b " << (pwm ? 'd' : 'I') << ' ' << (int)nodeId << endl;
@@ -84,11 +84,11 @@ void LastMinuteBuffer::printLastMinuteBuffer(const uint8_t nodeId, const bool pw
         {
             if (pwm)
             {
-                *textOutputStream << entry->pwm * 100 / 255 << "%";
+                textOutputStream << entry->pwm * 100 / 255 << "%";
             }
             else
             {
-                *textOutputStream << entry->iluminance;
+                textOutputStream << entry->iluminance;
             }
 
 
@@ -96,7 +96,7 @@ void LastMinuteBuffer::printLastMinuteBuffer(const uint8_t nodeId, const bool pw
             /*if (&(*entry) == lastElement)
                 *textOutputStream << endl;
             else*/
-            *textOutputStream << "," << endl;
+            textOutputStream << "," << endl;
         }
     }
     mtx.unlock();

@@ -8,7 +8,7 @@
 #include "Server.h"
 #include "command.h"
 
-std::shared_ptr<Server> Commands::program;
+std::shared_ptr<Server> Commands::server;
 
 uint8_t Commands::commandGetDestination(const std::string & substring)
 {
@@ -28,13 +28,13 @@ uint8_t Commands::commandGetDestination(const std::string & substring)
     }
 
     //searches the nodeIds vector to see if this destination is present there
-    program->mtxNodeIds.lock();
-    if (std::find(program->nodeIds.begin(), program->nodeIds.end(), destination) == program->nodeIds.end())
+    server->mtxNodeIds.lock();
+    if (std::find(server->nodeIds.begin(), server->nodeIds.end(), destination) == server->nodeIds.end())
     {
-        program->mtxNodeIds.unlock();
+        server->mtxNodeIds.unlock();
         throw input_exception("Destination ID " + to_string(destination) + " not present");
     }
-    program->mtxNodeIds.unlock();
+    server->mtxNodeIds.unlock();
 
     return destination;
 }
@@ -73,7 +73,7 @@ uint8_t Commands::checkGetArguments(std::string *data)
         }
         else
         {
-            throw input_exception("Argument" + std::to_string((*data)[2]) + " is not valid for total");
+            throw input_exception("Argument " + std::to_string((char)(*data)[2]) + " is not valid for total");
         }
     }
 
@@ -166,7 +166,7 @@ pair<uint8_t, bool> Commands::checkSetArgumentsBool(const std::string& data)
 }
 
 //TODO isto pode levar um parametro que é o stream onde vai escrever (ou cout para terminal, ou socket)
-Command Commands::interpretCommand(std::string line, std::ostream* textOutputStream,
+Command Commands::interpretCommand(std::string line, std::ostream& textOutputStream,
     std::shared_ptr<ServerConnection> clientSession)
 {
     if (line.length() >= 1 && line[0] == 'q')
@@ -176,6 +176,18 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
     else if (line.length() >= 1 && line[0] == 'r')
     {
         return Command((char)line[0], 0, '\0');
+    }
+    else if (line.rfind("start save", 0) == 0)
+    {
+        //Starts saving the values
+        server->startSaveValues(textOutputStream);
+        return Command('\0', 0, '\0');
+    }
+    else if (line.rfind("stop save", 0) == 0)
+    {
+        //Stops saving the values
+        server->stopSaveValues(textOutputStream);
+        return Command('\0', 0, '\0');
     }
     if (line.length() > 2 && line[1] == ' ')
     {
@@ -218,18 +230,18 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
                 
                 //command = Command((char)line[0], destination, (char)line[2]);
                 if(line[2] == 'I')
-                    program->lastMinuteBuffer2.printLastMinuteBuffer(destination, false, textOutputStream);
+                    server->lastMinuteBuffer.printLastMinuteBuffer(destination, false, textOutputStream);
                 else if(line[2] == 'd')
-                    program->lastMinuteBuffer2.printLastMinuteBuffer(destination, true, textOutputStream);
+                    server->lastMinuteBuffer.printLastMinuteBuffer(destination, true, textOutputStream);
                 else
-                    *textOutputStream << "Must be buffer 'I' or 'd': " << line << std::endl;
+                    textOutputStream << "Must be buffer 'I' or 'd': " << line << std::endl;
             }
             else if (line[0] == 's')
             {
                 destination = checkGetArguments(&line);
 
                 //Locks mutex for the streaming active
-                std::lock_guard<std::mutex> lockMtxStreamingActive(program->mtxStreamingActive);
+                std::lock_guard<std::mutex> lockMtxStreamingActive(server->mtxStreamingActive);
 
 
                 //This client(or the server) is not streaming that variable. Starts streaming
@@ -238,45 +250,45 @@ Command Commands::interpretCommand(std::string line, std::ostream* textOutputStr
                 {
                     //Toggles the bool
                     //The iluminance is the second bool on the pair
-                    bool prevValue = program->activeStreams[destination][clientSession].second;
+                    bool prevValue = server->activeStreams[destination][clientSession].second;
 
                     if (prevValue)
                         //Disabling
-                        *textOutputStream << "ack" << std::endl;
+                        textOutputStream << "ack" << std::endl;
 
-                    program->activeStreams[destination][clientSession].second = !prevValue;
+                    server->activeStreams[destination][clientSession].second = !prevValue;
                 }
                 else if (typeOfStream == 'd')
                 {
                     //Toggles the bool
                     //The duty-cycle is the second bool on the pair
-                    bool prevValue = program->activeStreams[destination][clientSession].first;
+                    bool prevValue = server->activeStreams[destination][clientSession].first;
 
                     if (prevValue)
                         //Disabling
-                        *textOutputStream << "ack" << std::endl;
+                        textOutputStream << "ack" << std::endl;
 
-                    program->activeStreams[destination][clientSession].first = !prevValue;
+                    server->activeStreams[destination][clientSession].first = !prevValue;
                 }
                 else
                 {
-                    *textOutputStream << "Must be buffer 'I' or 'd': " << line << std::endl;
+                    textOutputStream << "Must be buffer 'I' or 'd': " << line << std::endl;
                 }
             }
             else
             {
                 //no messagem type recognized
-                *textOutputStream << "Unknown command: " << line << std::endl;
+                textOutputStream << "Unknown command: " << line << std::endl;
             }
         }
         catch (std::exception &e)
         {
-            *textOutputStream << e.what() << std::endl;
+            textOutputStream << e.what() << std::endl;
         }
     }
     else
     {
-        *textOutputStream << "Unknown command: " << line << std::endl;
+        textOutputStream << "Unknown command: " << line << std::endl;
     }
 
     return Command();

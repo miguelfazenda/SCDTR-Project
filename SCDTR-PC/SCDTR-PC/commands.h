@@ -11,9 +11,9 @@ class Server;
 class Commands
 {
 public:
-    static Command interpretCommand(std::string line, std::ostream* textOutputStream,
+    static Command interpretCommand(std::string line, std::ostream& textOutputStream,
         std::shared_ptr<ServerConnection> clientSession);
-    static std::shared_ptr<Server> program;
+    static std::shared_ptr<Server> server;
 private:
     static uint8_t commandGetDestination(const std::string & substring);
     static uint8_t checkGetArguments(std::string *data);

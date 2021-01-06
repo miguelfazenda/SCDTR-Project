@@ -18,7 +18,7 @@ class LastMinuteBuffer
 public:
     void addToLastMinuteBuffer(uint8_t nodeId, FrequentDataValues frequentDataValues);
     void removeOldLastMinuteBufferEntries();
-    void printLastMinuteBuffer(const uint8_t nodeId, const bool pwm, std::ostream* textOutputStream);
+    void printLastMinuteBuffer(const uint8_t nodeId, const bool pwm, std::ostream& textOutputStream);
 
     //Map: nodeId, vector
     //Vector: buffer containing pairs of <time, reading>

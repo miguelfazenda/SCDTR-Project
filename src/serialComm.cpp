@@ -45,15 +45,16 @@ void SerialComm::readSerial()
 			else if (command.destination == 0)
 			{
 				//TODOS
-				//Sends the request for the command to all nodes except for this hub
-				for (uint8_t nodeIdx = 0; nodeIdx < numTotalNodes; nodeIdx++)
+				//Broadcasts the request for the command to all nodes
+				communication.sendCommandRequest(0, command);
+				/*for (uint8_t nodeIdx = 0; nodeIdx < numTotalNodes; nodeIdx++)
 				{
 					if (nodesList[nodeIdx] == nodeId)
 						//Ignore hub (only send CAN message to other nodes)
 						continue;
 
 					communication.sendCommandRequest(nodesList[nodeIdx], command);
-				}
+				}*/
 
 				// The number of nodes that still haven't sent their result
 				numNodesWaitingResult = numTotalNodes - 1;
