@@ -146,6 +146,18 @@ uint32_t SerialComm::executeCommand(Command command)
 		{
 			convert.valueFloat = (millis() - timeSinceLastReset)/1000;
 		}
+		else if (command.getType() == 'p')
+		{
+			
+		}
+		else if (command.getType() == 'e')
+		{
+			
+		}
+		else if (command.getType() == 'v')
+		{
+			
+		}
 
 		return convert.value32b;
 	}

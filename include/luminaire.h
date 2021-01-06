@@ -31,6 +31,7 @@ public:
     float luxOccupied = 100.0;
     float luxNonOccupied = 30.0;
     float cost;
+    unsigned long samplingTime; //Time since last sampling IN MICROSECONDS!
 
     float measuredVoltage;
 

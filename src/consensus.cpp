@@ -13,7 +13,7 @@ void Consensus::init()
     numberOfMsgExpected = ((numTotalNodes - 1)/3 + 1) * (numTotalNodes-1);
 
     nodeIdx = nodeIndexOnGainMatrix[nodeId];
-    consensusState = 1;
+    consensusState = ITERATE_STATE;
     numIter = 0;
     numberOfMsgReceived = 0;
     //cost[nodeIdx] = luminaire.cost;
@@ -228,33 +228,33 @@ void Consensus::consensus_iterate()
 void Consensus::consensus_main()
 {
 
-    if (consensusState == 1)
+    if (consensusState == ITERATE_STATE)
     {
         Serial.println(F("-- Consensus Iterate --"));
         consensus_iterate();
         Serial.println(dutyCycleBest[0]);
         Serial.println(dutyCycleBest[1]);
         Serial.println(dutyCycleBest[2]);
-        consensusState = 2;
+        consensusState = SENDING_DUTY_CYCLE_STATE;
     }
 
-    if (consensusState == 2)
+    if (consensusState == SENDING_DUTY_CYCLE_STATE)
     {
         Serial.println(F("-------- Sending dutyCycle ----------"));
         communication.sendConsensusDutyCycle(dutyCycleBest);
-        consensusState = 3;
+        consensusState = WAITING_RECIVE_DUTY_CYCLE_STATE;
     }
 
-    if (consensusState == 3)
+    if (consensusState == WAITING_RECIVE_DUTY_CYCLE_STATE)
     {
         Serial.print(F("numberOfMsgReceived -> ")); Serial.println(numberOfMsgReceived);
         if (numberOfMsgReceived == numberOfMsgExpected) //Ou >= ?????
         {
-            consensusState = 4;
+            consensusState = UPDATE_STATE;
         }
     }
     //Serial.print(F("Consensus -> ")); Serial.println(consensusState);
-    if (consensusState == 4)
+    if (consensusState == UPDATE_STATE)
     {
         //Serial.println(F("---AVG----"));
         for (uint8_t j = 0; j < numTotalNodes; j++)
@@ -273,7 +273,7 @@ void Consensus::consensus_main()
         Serial.print(numIter); Serial.print("   "); Serial.print(maxIter);  Serial.print("   "); 
         if (numIter == maxIter)
         {
-            consensusState = 0;
+            consensusState = OFF_STATE;
             numIter = 0;
             numberOfMsgReceived = 0;
 
@@ -290,23 +290,13 @@ void Consensus::consensus_main()
                 Serial.print(dutyCycleBest[i]);Serial.print(" * ");Serial.println(ki[i]);
                 newLuxRef += (dutyCycleBest[i]) * ki[i];
             }
-            newLuxRef -= calibrationFSM.residualArray[nodeIdx];
+            newLuxRef += calibrationFSM.residualArray[nodeIdx];
             Serial.print(F("No FINAL DO CONSENSUS ----->"));
         	Serial.println(newLuxRef);
             luminaire.setLuxRefAfterConsensus(newLuxRef); //Change luxRefAfterConsensus and starts simulation
         }
     }
 }
-
-// void Consensus::receivedMsg(float *receivedArray)
-// {
-//     for (uint8_t i = 0; i < numTotalNodes; i++)
-//     {
-//         receivedDutyCycle[i] += receivedArray[i];
-//         //Serial.println(receivedArray[i]);
-//     }
-//     numberOfMsgReceived += 1;
-// }
 
 float Consensus::multiplyTwoArrays(float *array1, float *array2, uint8_t dimention)
 {

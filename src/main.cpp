@@ -213,8 +213,8 @@ void loop()
 
 		if (hubNode != 0)
 			sendFrequentData();
-			
-		timeLastSentFrequentData = timeNow;
+					
+		timeLastSentFrequentData = timeNow;		
 	}
 
 	mainFSM.loop();
@@ -222,14 +222,11 @@ void loop()
 	// if (didControl)
 	// 	if (hubNode != 0)
 	// 		sendFrequentData();
+	//	Chamar Update Metrics	
 
-	if (consensus.consensusState != 0)
+	if (consensus.consensusState != OFF_STATE)
 	{
-		Serial.print(F("Main .-.-> "));
-		Serial.println(consensus.consensusState);
 		consensus.consensus_main();
-		Serial.print(F("SAI DO COSEN MAIN COM "));
-		Serial.println(consensus.consensusState);
 	}
 
 	if (didControl)

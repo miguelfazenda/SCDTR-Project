@@ -3,6 +3,13 @@
 
 #include "calibrationFSM.h"
 
+#define OFF_STATE 0
+#define ITERATE_STATE 1
+#define SENDING_DUTY_CYCLE_STATE 2
+#define WAITING_RECIVE_DUTY_CYCLE_STATE 3
+#define UPDATE_STATE 4
+
+
 class Consensus
 {
 private:
@@ -27,7 +34,7 @@ private:
 
 
 public:
-    uint8_t consensusState = 0; // 0->Nada; 1->ConsensusIterate; 2->Em comunicação; 3-> A espera de mensagens; 4->Atualização de variaveis
+    uint8_t consensusState = OFF_STATE; // 0->Nada; 1->ConsensusIterate; 2->Em comunicação; 3-> A espera de mensagens; 4->Atualização de variaveis
     float dutyCycleBest[MAX_NUM_NODES] = {0.0};
     float receivedDutyCycle[MAX_NUM_NODES] = {0.0};
     uint16_t numberOfMsgReceived = 0;

@@ -33,7 +33,6 @@ void Luminaire::init(bool occupied) {
 
 void Luminaire::loop() {
 	unsigned long timeNow;
-	unsigned long samplingTime; //Time since last sampling IN MICROSECONDS!
 
 	//Calculates time since last sample
 	timeNow = micros();
