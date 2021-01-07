@@ -90,6 +90,10 @@ private:
 	//Command timeout timer, that every 3 seconds checks if a command had no response
 	unique_ptr<boost::asio::steady_timer> timerCommandTimeout;
 
+    //If the command reset is sent, it should received as many ACKs as there are nodes
+    int expectedNumberOfResetACK = 0;
+    int numberOfResetACKReceived = 0;
+
 
 	//create copy of console stream descriptor
 #ifdef _WIN32

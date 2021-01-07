@@ -117,8 +117,8 @@ void loop()
 	{
 		serialComm.sendPCDiscovery();
 
-		if (hubNode != 0)
-			sendFrequentData();
+		/*if (hubNode != 0)
+			sendFrequentData();*/
 					
 		timeLastSentFrequentData = timeNow;		
 	}
@@ -127,8 +127,8 @@ void loop()
 
 	if (didControl)
 	{
-		//if (hubNode != 0)
-			//sendFrequentData();
+		if (hubNode != 0)
+			sendFrequentData();
 		
 		metrics.updateMetrics();
 	}

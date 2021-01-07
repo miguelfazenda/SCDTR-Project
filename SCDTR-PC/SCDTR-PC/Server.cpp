@@ -274,6 +274,21 @@ void Server::receivedCommandResponse(uint32_t value)
     mtxCommandsQueue.lock();
     if (commandsQueue.size() > 0)
     {
+        auto commandQueueElement = commandsQueue.front();
+
+        //If the command reset is sent, it waits until it receives as many ACKs as there are nodes
+        if (commandQueueElement.command.cmd == 'r')
+        {
+            if (value == 1)
+                numberOfResetACKReceived++;
+            
+            if (numberOfResetACKReceived < expectedNumberOfResetACK)
+            {
+                mtxCommandsQueue.unlock();
+                return;
+            }
+        }
+
         /*
          * Prints the command
          */
@@ -281,7 +296,6 @@ void Server::receivedCommandResponse(uint32_t value)
         //Cancels the timeout timer as this command didn't time out
         timerCommandTimeout->cancel();
 
-        auto commandQueueElement = commandsQueue.front();
 
         //Writes the command response here if it's to be redirected to a client
         std::ostringstream textOutputForClient;
@@ -319,7 +333,7 @@ void Server::receivedCommandResponse(uint32_t value)
                     << destination << " " << convert.valueFloat << endl;
             }
         }
-        else if (command.cmd == 'o' || command.cmd == 'O' || command.cmd == 'U' || command.cmd == 'c' || command.cmd == 's')
+        else if (command.cmd == 'o' || command.cmd == 'O' || command.cmd == 'U' || command.cmd == 'c' || command.cmd == 's' || command.cmd == 'r')
         {
             //Print ack or err 
             *textOutputStream << (value == 1 ? "ack" : "err") << endl;
@@ -481,6 +495,12 @@ void Server::executeNextInCommandQueue()
         return;
     }
     
+    if (commandQueueElement.command.cmd == 'r')
+    {
+        //If the command reset is sent, it should received as many ACKs as there are nodes
+        numberOfResetACKReceived = 0;
+        expectedNumberOfResetACK = nodeIds.size();
+    }
 
     //Converts the command to a byteArray and sends it with a sync byte first (255)
     uint8_t buf[7];
@@ -514,7 +534,7 @@ void Server::startSaveValues(std::ostream& textOutputStream)
     writingToFile = true;
     try
     {
-        fileName = "teste.txt";
+        fileName = "values.txt";
         fileOutput = ofstream(fileName);
     }
     catch (exception& ex)
