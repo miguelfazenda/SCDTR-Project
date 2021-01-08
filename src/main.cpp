@@ -127,16 +127,21 @@ void loop()
 
 	if (didControl)
 	{
+		Serial.print(F("Sampling time: "));
+		Serial.println(luminaire.samplingTime);
+
 		if (hubNode != 0)
 			sendFrequentData();
 		
 		metrics.updateMetrics();
 	}
 
-	if (consensus.consensusState != OFF_STATE)
+	/*if (consensus.consensusState != OFF_STATE)
 	{
 		consensus.consensus_main();
-	}
+	}*/
+	//luminaire.luxRefAfterConsensus = luminaire.luxRef;
+	luminaire.setLuxRefAfterConsensus(luminaire.luxRef);
 
 	if (didControl)
 		didControl = false;

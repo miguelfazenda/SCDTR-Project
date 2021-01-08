@@ -397,10 +397,13 @@ void Server::receivedFrequentData(uint8_t nodeId, uint8_t pwm, float iluminance)
     {
         //Locks mutex for the file writing
         std::lock_guard<std::mutex> lockMtxWriteToFile(mtxWriteToFile);
+        
+        time_t millisecSinceEpoch = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+        time_t millis = millisecSinceEpoch - millisFileWritingStated;
 
         if (writingToFile)
         {
-            fileOutput << (int)nodeId << ", " << pwm*100.0f/255.0f << ", " << iluminance << endl;
+            fileOutput << (int)nodeId << "," << millis << "," << pwm*100.0f/255.0f << "," << iluminance << endl;
         }
     }
 
@@ -536,6 +539,9 @@ void Server::startSaveValues(std::ostream& textOutputStream)
     {
         fileName = "values.txt";
         fileOutput = ofstream(fileName);
+
+        
+        millisFileWritingStated = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
     }
     catch (exception& ex)
     {

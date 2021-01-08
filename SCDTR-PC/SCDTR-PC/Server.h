@@ -79,6 +79,7 @@ private:
     std::string fileName;
     bool writingToFile = false;
     std::ofstream fileOutput;
+    time_t millisFileWritingStated;
 
 	boost::asio::io_context& io_context;
 	boost::asio::ip::tcp::acceptor acceptor;

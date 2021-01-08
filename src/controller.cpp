@@ -2,8 +2,8 @@
 #include <Arduino.h> //Só serve para os prints
 #include "glob.h"
 
-#define KP 10 //15
-#define KI 800
+#define KP 20
+#define KI 1500
 
 Controller::Controller()
 {

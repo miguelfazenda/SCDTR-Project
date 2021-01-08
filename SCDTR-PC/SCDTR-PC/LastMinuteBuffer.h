@@ -25,6 +25,8 @@ public:
     //Reading: pair containing pwm(uint8_t) and iluminance(float)
     //std::map<uint8_t, std::vector<std::pair<unsigned long, std::pair<uint8_t, float>>>> lastMinuteBuffer;
 
+    time_t lastTimeAddedEntry;
+
     std::map<uint8_t, std::map<time_t, std::vector<FrequentDataValues>>> lastMinuteBuffer;
 private:
     std::mutex mtx;

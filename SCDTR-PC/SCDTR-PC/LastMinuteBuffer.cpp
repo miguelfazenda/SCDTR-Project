@@ -6,8 +6,12 @@ using namespace std;
 
 void LastMinuteBuffer::addToLastMinuteBuffer(uint8_t nodeId, FrequentDataValues frequentDataValues)
 {
-    removeOldLastMinuteBufferEntries();
     time_t timeNow = time(0);
+
+    if(timeNow != lastTimeAddedEntry)
+        removeOldLastMinuteBufferEntries();
+
+    lastTimeAddedEntry = timeNow;
 
     //Note: buffer[nodeId] automatically inserts a new entry if key "nodeId" doesnt exist yet
     mtx.lock();
@@ -28,7 +32,7 @@ void LastMinuteBuffer::removeOldLastMinuteBufferEntries()
 
     time_t timeThreshold = timeNow - 60;
 
-    for (auto nodeBufferKeyValue : lastMinuteBuffer)
+    for (auto &nodeBufferKeyValue : lastMinuteBuffer)
     {
         //For each pair nodeId,Buffer
         auto nodeBuffer = &nodeBufferKeyValue.second;
@@ -60,9 +64,6 @@ void LastMinuteBuffer::printLastMinuteBuffer(const uint8_t nodeId, const bool pw
 {
     //Prints header
     cout << "b " << (pwm ? 'd' : 'I') << ' ' << (int)nodeId << endl;
-
-
-    removeOldLastMinuteBufferEntries();
 
     mtx.lock();
     if (lastMinuteBuffer.find(nodeId) == lastMinuteBuffer.end())

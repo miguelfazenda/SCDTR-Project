@@ -114,8 +114,17 @@ void Communication::received(Luminaire *luminaire, can_frame *frame)
     {
         //This is a hub node that received a frequent data packet from another node.
         // Send it on the serial interface
-        SerialFrequentDataPacket frequentDataPacket(frame->data);
-        frequentDataPacket.sendOnSerial();
+        /*SerialFrequentDataPacket frequentDataPacket(frame->data);
+        frequentDataPacket.sendOnSerial();*/
+
+        Serial.write(255);
+        Serial.write('F');
+        Serial.write(frame->data[0]);
+        Serial.write(frame->data[1]);
+        Serial.write(frame->data[2]);
+        Serial.write(frame->data[3]);
+        Serial.flush();
+
     }
     else if (msgType == CAN_NO_LONGER_IS_HUB_NODE)
     {
