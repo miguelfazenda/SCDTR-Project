@@ -255,7 +255,7 @@ void Server::handle_read_serial(const boost::system::error_code &err, size_t len
         offset = syncBytePos + sizeMsg;
     }
 
-    cout << "[SERIAL] " << line << endl;
+    //cout << "[SERIAL] " << line << endl;
 
     start_read_serial();
 }
