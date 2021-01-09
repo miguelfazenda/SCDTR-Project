@@ -93,29 +93,6 @@ void Luminaire::control(unsigned long timeNow, unsigned long samplingTime)
 
 	//Apply PWM SIGNAL
 	analogWrite(LED_PIN, pwm);
-
-	/*
-	 * 	 Prints useful data
-	 */
-
-#if false //Choose between which prints we want
-	//Serial monitor prints
-	Serial.print("V=");
-	Serial.print(measuredVoltage);
-	Serial.print("\tsimV=");
-	Serial.println(expectedVoltage);
-	Serial.print("PWM=");
-	Serial.print(pwm);
-	Serial.print("\te=");
-	Serial.print(errorVoltage);
-	Serial.print("\tLUX=");
-	Serial.println(voltageToLux(measuredVoltage));
-#else
-	//Serial plotter prints
-	// Serial.print(voltageToLux(measuredVoltage));
-	// Serial.print(",");
-	// Serial.println(voltageToLux(expectedVoltage));
-#endif
 }
 
 /**
@@ -135,11 +112,6 @@ void Luminaire::setOccupied(bool o)
 	occupied = o;
 
 	luxRef = occupied ? luxOccupied : luxNonOccupied;
-
-	Serial.print(F("OCCUPIED\tReference:\tLux="));
-	Serial.print(luxRef);
-	Serial.print("\tV=");
-	Serial.println(luxToVoltage(luxRef));
 }
 
 void Luminaire::setSystemGain(float Kii)

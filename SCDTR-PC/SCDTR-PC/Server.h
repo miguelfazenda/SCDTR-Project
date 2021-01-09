@@ -81,8 +81,6 @@ private:
     std::ofstream fileOutput;
     time_t millisFileWritingStated;
 
-    std::chrono::steady_clock::time_point benchmarkStartTime;
-
 	boost::asio::io_context& io_context;
 	boost::asio::ip::tcp::acceptor acceptor;
 
