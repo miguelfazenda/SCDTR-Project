@@ -209,7 +209,7 @@ void Consensus::consensus_main()
 
     if (consensusState == WAITING_RECIVE_DUTY_CYCLE_STATE)
     {
-        if (numberOfMsgReceived == numberOfMsgExpected) //Ou >= ?????
+        if (numberOfMsgReceived == numberOfMsgExpected)
         {
             consensusState = UPDATE_STATE;
         }

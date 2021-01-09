@@ -9,7 +9,7 @@ union FloatTo4Bytes
 };
 
 /**
- * Reads if there was an input on the serial port, if so, change the lux reference
+ * Reads if there was an input on the serial port
  */
 void SerialComm::readSerial()
 {

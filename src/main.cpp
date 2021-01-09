@@ -38,16 +38,12 @@ volatile bool arduino_overflow = false;
 /*volatile*/ can_frame_stream cf_stream;
 
 //frequent data is the iluminance and duty cycle that should be periodicaly sent
-unsigned long timeLastSentFrequentData = 0;
+unsigned long timeLastPCDiscovery = 0;
 
 void setup()
 {
 	// initialize serial communications at 1Mbps
 	Serial.begin(1000000);
-
-	// TODO Retirar
-	// pinMode(LED_BUILTIN, OUTPUT);
-	// TODO Retirar
 
 	// Change PWM frequency on PIN 9
 	TCCR1B = TCCR1B & (B11111000 | B00000001);
@@ -113,20 +109,18 @@ void loop()
 	}
 
 	unsigned long timeNow = millis();
-	if (timeNow - timeLastSentFrequentData > 2000)
+	if (timeNow - timeLastPCDiscovery > 2000)
 	{
 		serialComm.sendPCDiscovery();
-					
-		timeLastSentFrequentData = timeNow;		
+		timeLastPCDiscovery = timeNow;		
 	}
 
+	//Main state machine
 	mainFSM.loop();
 
 	if (didControl)
 	{
-		/*Serial.print(F("Sampling time: "));
-		Serial.println(luminaire.samplingTime);*/
-
+		//Sends the frequent data, and updates the metrics
 		if (hubNode != 0)
 			sendFrequentData();
 		
@@ -135,11 +129,11 @@ void loop()
 
 	if (consensus.consensusState != OFF_STATE)
 	{
+		//Executes the consensus algorith
 		consensus.consensus_main();
 	}
 
-	if (didControl)
-		didControl = false;
+	didControl = false;
 }
 
 /**

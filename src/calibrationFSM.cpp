@@ -61,7 +61,7 @@ void CalibrationFSM::runStateInit()
  */
 void CalibrationFSM::runStateWaitReady()
 {
-    analogWrite(LED_PIN, 0); //TODO isto aqui corre muitas vezes :/
+    analogWrite(LED_PIN, 0);
 
     if (numNodesReady == numTotalNodes)
     {                      //every node is ready

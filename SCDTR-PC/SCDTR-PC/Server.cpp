@@ -175,13 +175,6 @@ void Server::handle_read_serial(const boost::system::error_code &err, size_t len
                 sizeMsg = 5; //Tamanho da mensagem em bytes (a contar com o sync byte e com o 'F')
                 if (line.length() - syncBytePos >= sizeMsg)
                 {
-                    /*auto a = (uint8_t)line[syncBytePos + 2];
-                    auto b = (uint8_t)line[syncBytePos + 3];
-                    auto c = (uint8_t)line[syncBytePos + 4];
-                    auto d = (uint8_t)line[syncBytePos + 5];
-
-                    cout << "AAAAAAAAAAAA " << a << " " << b << " " << c << " " << d << endl;*/
-
                     uint32_t value = (uint32_t)((uint8_t)line[syncBytePos + 2]) << 24 |
                         (uint32_t)((uint8_t)line[syncBytePos + 3]) << 16 |
                         (uint32_t)((uint8_t)line[syncBytePos + 4]) << 8 |
