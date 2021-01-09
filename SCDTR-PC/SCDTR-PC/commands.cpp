@@ -45,7 +45,7 @@ uint8_t Commands::commandGetDestination(const std::string & substring)
  */
 uint8_t Commands::checkGetArguments(std::string *data)
 {
-    std::string arguments = "IdoOULxRrcptevf"; //string that has every char thats corresponds to
+    std::string arguments = "IdoOULxrcptevf"; //string that has every char thats corresponds to
                                               //one argument of comands type get
     std::string argumentsWithT = "pevf";      //string that has every char thats corresponds to
                                               //one argument of comands type get that allows the last argument to be 'T'

@@ -353,7 +353,7 @@ void Server::receivedCommandResponse(uint32_t value)
     else
     {
         mtxCommandsQueue.unlock();
-        cout << "Warning: Received response " << (float)value << " for command, but command queue is empty";
+        //cout << "Warning: Received response " << (float)value << " for command, but command queue is empty";
     }
 }
 
