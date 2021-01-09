@@ -17,7 +17,9 @@
 #define EEPROM_ADDR_SLOPEM 0 //Address of where to get M of this arduino on the EEPROM
 #define EEPROM_ADDR_SLOPEB 4 //Address of where to get B can id of this arduino on the EEPROM
 #define EEPROM_ADDR_NODEID 8 //Address of where to get the can id of this arduino on the EEPROM
-#define EEPROM_ADDR_COST 9 //(até 13)Address of where to get the luminair cost of this arduino on the EEPROM
+#define EEPROM_ADDR_COST 9 //Address of where to get the luminair cost of this arduino on the EEPROM
+#define EEPROM_ADDR_a 13 //Address of where to get the a parameter for the tau function (a+b*log())
+#define EEPROM_ADDR_b 17 //Address of where to get the b parameter for the tau function (a+b*log())
 
 #define CONTROL_DELAY 10000						//100 Hz corresponds to 1/100 s = 10000us
 

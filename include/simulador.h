@@ -18,6 +18,11 @@ public:
    * @param t time
    */
   float simulate(unsigned long t);
+
+  int getTau(float voltage);
+
+  float a; //a parameter for the tau function (a+b*log())
+  float b; //b parameter for the tau function (a+b*log())
 };
 
 

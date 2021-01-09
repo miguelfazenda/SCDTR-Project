@@ -4,8 +4,8 @@
 /**
  * Aproximate the time constante for the capacitor to charge to a given function
  */
-int getTau(float voltage) {
-  return -5194*log(voltage) + 13928;
+int Simulador::getTau(float voltage) {
+  return -b*log(voltage) + a; //-5194*log(voltage) + 13928;
 }
 
 void Simulador::startStep(float vInitial, float vFinal) {
