@@ -274,6 +274,8 @@ void Server::receivedCommandResponse(uint32_t value)
     mtxCommandsQueue.lock();
     if (commandsQueue.size() > 0)
     {
+        cout << "Time: " << (std::chrono::high_resolution_clock::now() - benchmarkStartTime).count() << endl;
+
         auto commandQueueElement = commandsQueue.front();
 
         //If the command reset is sent, it waits until it receives as many ACKs as there are nodes
@@ -511,6 +513,7 @@ void Server::executeNextInCommandQueue()
     commandQueueElement.command.toByteArray(buf + 1);
     mtxCommandsQueue.unlock();
     
+    benchmarkStartTime = std::chrono::high_resolution_clock::now();
     writeToSerialPort(boost::asio::buffer(buf, 7));
 
     //Starts the timeout timer - it is canceled if there is a reponse in time.

@@ -15,16 +15,6 @@ CalibrationFSM::CalibrationFSM()
     otherNodeLedOn = false;
 
     done = false;
-
-    //Zero gain matrix
-    /*for (uint8_t i = 0; i < MAX_NUM_NODES; ++i)
-    {
-        for (uint8_t j = 0; j < MAX_NUM_NODES; ++j) {
-            gainMatrix[i][j] = 0.0f;
-        }
-    }*/
-
-    //TODO Vetor residual a 0
 }
 
 CalibrationFSM::~CalibrationFSM()
@@ -56,9 +46,6 @@ void CalibrationFSM::runStateInit()
 
     nodeLedOn = -1; //Index from the node ID vector (-1 none of the leds are on)
 
-#ifdef CALIB_PRINTS
-    Serial.println("[CalibFSM] State = WaitReady");
-#endif
     setState(CalibrationState::WaitReady);
 }
 
@@ -79,9 +66,6 @@ void CalibrationFSM::runStateWaitReady()
     if (numNodesReady == numTotalNodes)
     {                      //every node is ready
         numNodesReady = 0; //resets the
-#ifdef CALIB_PRINTS
-        Serial.println("[CalibFSM] All nodes ready!");
-#endif
 
         if (nodeLedOn == -1 || luxReadNum == 2)
         {
@@ -91,9 +75,6 @@ void CalibrationFSM::runStateWaitReady()
 
         if (nodeLedOn >= (int)numTotalNodes)
         {
-#ifdef CALIB_PRINTS
-            Serial.println("DONE calibrating!");
-#endif
             done = true;
         }
         else if (nodesList[nodeLedOn] == nodeId)
@@ -102,17 +83,11 @@ void CalibrationFSM::runStateWaitReady()
             //  and then wait for the transient of the measure
             analogWrite(LED_PIN, pwm[luxReadNum]);
             communication.sendCalibLedOn(); //sends message that indicates that the led is on
-#ifdef CALIB_PRINTS
-            Serial.println("[CalibFSM] State = WaitTransient");
-#endif
             setState(CalibrationState::WaitTransient);
         }
         else
         {
             //If it's some other node's turn to turn on LED, go to state that waits for it to turn it on
-#ifdef CALIB_PRINTS
-            Serial.println("[CalibFSM] State = WaitLedOn");
-#endif
             setState(CalibrationState::WaitLedOn);
         }
     }
@@ -130,9 +105,6 @@ void CalibrationFSM::runStateWaitLedOn()
     if (otherNodeLedOn)
     {
         otherNodeLedOn = false; //Reset event bool
-#ifdef CALIB_PRINTS
-        Serial.println("[CalibFSM] State = WaitTransient");
-#endif
         //Go to state that waits for the transient of the measure
         setState(CalibrationState::WaitTransient);
     }
@@ -149,12 +121,6 @@ void CalibrationFSM::runStateWaitTrasient(unsigned long timeSinceLastTransition)
     {
         //Measure
         luxReads[luxReadNum] = luminaire.voltageToLux(luminaire.getVoltage()) - residualArray[nodeId];
-#ifdef CALIB_PRINTS
-        Serial.print(F("luxReads["));
-        Serial.print(luxReadNum);
-        Serial.print("] = ");
-        Serial.println(luxReads[luxReadNum]);
-#endif
         luxReadNum++; //increments the number of Luxreads
 
         float gain = -1;
@@ -171,9 +137,6 @@ void CalibrationFSM::runStateWaitTrasient(unsigned long timeSinceLastTransition)
         // Inform other nodes that this node is ready. Along with this message, send the calculated gain (-1 if this isn't the second reading)
         communication.sendCalibReady(gain);
         incrementNodesReady();
-#ifdef CALIB_PRINTS
-        Serial.println("[CalibFSM] State = WaitReady");
-#endif
         //Changes to the state where it waits for every node to be ready
         setState(CalibrationState::WaitReady);
     }
@@ -209,10 +172,6 @@ void CalibrationFSM::loop()
 void CalibrationFSM::incrementNodesReady()
 {
     numNodesReady++;
-#ifdef CALIB_PRINTS
-    Serial.print(F("numNodesReady = "));
-    Serial.println(numNodesReady);
-#endif
 }
 
 /**
@@ -238,14 +197,6 @@ void CalibrationFSM::receivedGainOrResidual(uint8_t sender, float value)
  */
 void CalibrationFSM::setGain(uint8_t i, uint8_t j, float gain)
 {
-#ifdef CALIB_PRINTS
-    Serial.print(F("gainMatrix["));
-    Serial.print(i);
-    Serial.print(", ");
-    Serial.print(j);
-    Serial.print("] = ");
-    Serial.println(gain);
-#endif
     gainMatrix[i][j] = gain;
 }
 

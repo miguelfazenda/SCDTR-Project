@@ -27,6 +27,8 @@ void ServerConnection::start()
 {
 	sendMessage("Welcome!\n");
 
+	cout << "A client has connected" << endl;
+
 	//Reads the next data
 	start_receive_read();
 }
@@ -45,7 +47,7 @@ void ServerConnection::sendMessage(std::string msg)
 			}
 			else
 			{
-				cout << "written!" << endl;
+				//cout << "written!" << endl;
 			}
 		}
 	);

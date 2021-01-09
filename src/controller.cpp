@@ -38,20 +38,6 @@ int Controller::calc(float errorVoltage, unsigned long samplingTime, float luxRe
 		u = 0;
 	}
 
-	/**
-	 * Prints controller variables
-	 */
-	/*Serial.print("\tuff=");
-	Serial.print(uff);
-	Serial.print("\tup=");
-	Serial.print(KP*errorVoltage);
-	Serial.print("\tdeltat=");
-	Serial.print(samplingTime);
-	Serial.print("\tdeltaui=");
-	Serial.print(samplingTime*(KI/1000000.0f)*errorVoltage);
-	Serial.print("\tui=");
-	Serial.println(ui);*/
-
 	return u;
 }
 

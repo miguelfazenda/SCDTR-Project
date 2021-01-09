@@ -61,9 +61,9 @@ void setup()
 
 	nodeIndexOnGainMatrix[0] = 0; //This means that if no led is on, it is saved on the line 0 of the matrix
 
-	Serial.print("\n ------  Node ");
+	/*Serial.print("\n ------  Node ");
 	Serial.println(nodeId);
-	Serial.println();
+	Serial.println();*/
 
 	/**
 	 * INIT CAN BUS
@@ -116,9 +116,6 @@ void loop()
 	if (timeNow - timeLastSentFrequentData > 2000)
 	{
 		serialComm.sendPCDiscovery();
-
-		/*if (hubNode != 0)
-			sendFrequentData();*/
 					
 		timeLastSentFrequentData = timeNow;		
 	}
@@ -127,8 +124,8 @@ void loop()
 
 	if (didControl)
 	{
-		Serial.print(F("Sampling time: "));
-		Serial.println(luminaire.samplingTime);
+		/*Serial.print(F("Sampling time: "));
+		Serial.println(luminaire.samplingTime);*/
 
 		if (hubNode != 0)
 			sendFrequentData();
@@ -136,12 +133,10 @@ void loop()
 		metrics.updateMetrics();
 	}
 
-	/*if (consensus.consensusState != OFF_STATE)
+	if (consensus.consensusState != OFF_STATE)
 	{
 		consensus.consensus_main();
-	}*/
-	//luminaire.luxRefAfterConsensus = luminaire.luxRef;
-	luminaire.setLuxRefAfterConsensus(luminaire.luxRef);
+	}
 
 	if (didControl)
 		didControl = false;

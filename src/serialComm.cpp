@@ -23,11 +23,8 @@ void SerialComm::readSerial()
 			uint8_t buf[6];
 			Serial.readBytes(buf, 6);
 
-			//uint8_t destination = buf[0];
 			Command command(buf);
 
-			/*Serial.print("[DEBUG] command destination = ");
-			Serial.println(command.destination);*/
 			if (command.cmd == 'D')
 			{
 				//Received response from 'PC Discovery', which means it is now a hub node
@@ -45,24 +42,18 @@ void SerialComm::readSerial()
 			else if (command.destination == 0)
 			{
 				//TODOS
-				//Broadcasts the request for the command to all nodes
-				communication.sendCommandRequest(0, command);
-				/*for (uint8_t nodeIdx = 0; nodeIdx < numTotalNodes; nodeIdx++)
-				{
-					if (nodesList[nodeIdx] == nodeId)
-						//Ignore hub (only send CAN message to other nodes)
-						continue;
-
-					communication.sendCommandRequest(nodesList[nodeIdx], command);
-				}*/
-
 				// The number of nodes that still haven't sent their result
 				numNodesWaitingResult = numTotalNodes - 1;
+
+				runningTotalCommand = true;
 
 				//Executes the command and stores the result (reseting the totalCommandResult accumulator)
 				FloatTo4Bytes result;
 				result.value = executeCommand(command);
 				totalCommandResult = result.floatValue;
+
+				//Broadcasts the request for the command to all nodes
+				communication.sendCommandRequest(0, command);
 
 				//If the hub is the only node, send the total back
 				sendTotalIfAllValueForTotalReceived();
@@ -72,7 +63,6 @@ void SerialComm::readSerial()
 				//Este nó responde
 
 				//Converts received bytes to object
-				//Command command(buf);
 				uint32_t responseValue = executeCommand(command);
 				sendResponse(responseValue);
 			}
@@ -90,8 +80,6 @@ void SerialComm::readSerial()
 					Serial.print(command.destination);
 					Serial.println(" doesn't exist");
 				}
-
-				//TODO else responde error? (talvez com um '255' e 'E'?)
 			}
 		}
 	}
@@ -168,8 +156,6 @@ uint32_t SerialComm::executeCommand(Command command)
 	}
 	else if (command.cmd == 'O' || command.cmd == 'U' || command.cmd == 'c')
 	{
-		Serial.print(F("Value = ")); Serial.println(command.value);
-		Serial.print(F("getFloatValue = ")); Serial.println(command.getFloatValue());
 		if (command.cmd == 'O')
 		{
 			if (luminaire.luxOccupied != command.getFloatValue())
@@ -235,12 +221,6 @@ uint32_t SerialComm::executeCommand(Command command)
 			communication.sendDoConsensus();
 			consensus.init();
 		}
-		/*Serial.print("SET RECEIVED  ");
-		Serial.print((char) command.cmd);
-		Serial.print("  ");
-		Serial.print(command.destination);
-		Serial.print(" ");
-		Serial.println(command.getValue() == 1 ? "true" : "false");*/
 		return 1;
 	}
 

@@ -21,13 +21,13 @@ void Metrics::flickerErrorUpdate()
 {
     if (numberOfSamples >= 3)
     {
-        int flickerFlag = (currentLux - previousLuxSamles[0]) * (previousLuxSamles[0] - previousLuxSamles[1]);
+        int flickerFlag = (currentLux - previousLuxSamples[0]) * (previousLuxSamples[0] - previousLuxSamples[1]);
 
         float newSample = 0;
         if (flickerFlag < 0)
         {
-            newSample = abs(currentLux - previousLuxSamles[0]) + abs(previousLuxSamles[0] - previousLuxSamles[1]);
-            newSample = newSample / (2 * luminaire.samplingTime/1000000); //Confirmar se é este o tempo que queremos
+            newSample = abs(currentLux - previousLuxSamples[0]) + abs(previousLuxSamples[0] - previousLuxSamples[1]);
+            newSample = newSample / (2 * luminaire.samplingTime/1000000.0f);
         }
         else
         {
@@ -37,8 +37,8 @@ void Metrics::flickerErrorUpdate()
         flickerError = (flickerError * (numberOfSamples - 2) + newSample) / (numberOfSamples - 1);
     }
 
-    previousLuxSamles[1] = previousLuxSamles[0];
-    previousLuxSamles[0] = currentLux;
+    previousLuxSamples[1] = previousLuxSamples[0];
+    previousLuxSamples[0] = currentLux;
 }
 
 void Metrics::updateMetrics()
@@ -56,8 +56,8 @@ void Metrics::updateMetrics()
 void Metrics::resetMetrics()
 {
     numberOfSamples = 0;
-    previousLuxSamles[0] = 0;
-    previousLuxSamles[1] = 0;
+    previousLuxSamples[0] = 0;
+    previousLuxSamples[1] = 0;
     currentLux = 0;
     energyConsumedSinceLastReset = 0;
     flickerError = 0;

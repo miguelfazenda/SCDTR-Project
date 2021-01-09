@@ -8,7 +8,7 @@ class Metrics
 private:
    const float nominalPower = 1; //[W]
    unsigned long numberOfSamples = 0;
-   float previousLuxSamles[2] = {0}; //Position [0] keeps the last sample, and position [1] keeps the second to last sample
+   float previousLuxSamples[2] = {0}; //Position [0] keeps the last sample, and position [1] keeps the second to last sample
    float currentLux = 0;
 
    float energyConsumption();
