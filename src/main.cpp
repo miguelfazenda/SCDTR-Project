@@ -57,7 +57,7 @@ void setup()
 
 	nodeIndexOnGainMatrix[0] = 0; //This means that if no led is on, it is saved on the line 0 of the matrix
 
-	//Get tau parameter from EEPROM
+	//Get tau parameters from EEPROM
 	EEPROM.get(EEPROM_ADDR_a, luminaire.simulator.a);
 	EEPROM.get(EEPROM_ADDR_b, luminaire.simulator.b);
 
