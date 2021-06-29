@@ -2,6 +2,11 @@
 
 **Project grade: 19 out of 20**
 
+Authors:
+* Daniel Chagas https://github.com/DanielNChagas
+* José Coelho https://github.com/JoseSCoelho
+* Miguel Fazenda https://github.com/miguelfazenda
+
 System Architecture:
 
 ![Architecture](https://raw.githubusercontent.com/miguelfazenda/SCDTR-Project/main/architecture.png "Architecture")
