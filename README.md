@@ -2,6 +2,19 @@
 
 **Project grade: 19 out of 20**
 
+System Architecture:
+
+![Architecture](https://raw.githubusercontent.com/miguelfazenda/SCDTR-Project/main/architecture.png "Architecture")
+
+Local controller for each luminaire:
+
+![Local controller](https://raw.githubusercontent.com/miguelfazenda/SCDTR-Project/main/controller.JPG "Architecture")
+
+Luminare and it's diagram:
+
+![Luminaire diagram](https://raw.githubusercontent.com/miguelfazenda/SCDTR-Project/main/luminaria_diagrama.jpg "Luminaire diagram")
+![Luminaire](https://raw.githubusercontent.com/miguelfazenda/SCDTR-Project/main/luminaria.jpg "Luminaire")
+
  é proposta uma solução para um sistema de controlo distribuído em tempo real de um sistema de iluminação que permite manter a luminosidade num certo intervalo de luz desejado, em cada área de um escritório. O sistema pretende-se que seja autónomo, no sentido em que se auto-regula em função de perturbações externas, e cooperativo, no sentido em que todos os intervenientes trabalham individualmente para atingir a sua iluminação ideal mas de forma coletiva para atingir o objetivo de minimização de energia. Estas características levantam alguns desafios relacionados com a comunicação e sincronização entre intervenientes, manter a coerência do sistema e a gestão dos processos distribuídos.
 
 Um dos objetivos principais do sistema é minimizar a energia gasta durante o seu funcionamento. De modo a medir a satisfação deste aspeto foram desenvolvidos métodos de medição da energia e potência gastas. A necessidade de bem-estar e comodidade do utilizador são avaliadas segundo as métricas de erro de visibilidade (desvio da referência desejada) e erro de \textit{flicker} (amplitude da oscilação de luminosidade num dado nó).
